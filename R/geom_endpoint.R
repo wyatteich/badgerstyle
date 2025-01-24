@@ -21,17 +21,6 @@ geom_endpoint <- function(data, x, y, color) {
              fill = "white",
              shape = 21, size = 3.7, stroke = 4.2)
 
-  # DEPRECATED
 
-  # list(
-  #   geom_point(data = endpoints,
-               # aes(x = {{x}}, y = {{y}}),
-               # color = color,
-               # size= 8),
-  #   geom_point(data = endpoints,
-  #              aes(x = {{x}}, y = {{y}}),
-  #              color = "white",
-  #              size = 3)
-  # )
 
 }

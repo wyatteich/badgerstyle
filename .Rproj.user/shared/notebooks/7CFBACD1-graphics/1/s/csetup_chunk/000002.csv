@@ -1,0 +1,21 @@
+"1","
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShjb3dwbG90KVxuXG5gYGAifQ== -->
+
+```r
+library(cowplot)
+
+```
+
+<!-- rnb-source-end -->
+"
+"0","```r
+library(cowplot)
+
+```"
+"1","
+Attaching package: ‘cowplot’
+
+The following object is masked from ‘package:lubridate’:
+
+    stamp
+"

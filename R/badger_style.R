@@ -43,7 +43,7 @@ badger_style <- function() {
     legend.title = ggplot2::element_blank(),
     legend.key = ggplot2::element_blank(),
     legend.text = ggplot2::element_text(
-      family = font,
+      family = titlefont,
       size = 10,
       color = text_color
     ),

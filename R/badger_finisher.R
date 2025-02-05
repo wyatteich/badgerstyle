@@ -40,7 +40,7 @@ badger_finisher <- function(plot,
     w <- 5.8
   } else {
     h<-5
-    w<-7
+    w<-9.55
   }
 
 

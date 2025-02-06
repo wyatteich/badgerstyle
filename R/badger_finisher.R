@@ -14,7 +14,8 @@ badger_finisher <- function(plot,
                             source = "Insert Source",
                             logo_ref = "C:/Users/Wyatt Eichholz/OneDrive - Badger Institute/R Reference/Badger-Institute-Icon.png",
                             filename = "plot.png",
-                            aspect = c("1col", "2col", "web")) {
+                            aspect = c("1col", "2col", "web", "custom"),
+                            height = NULL, width  = NULL) {
 
 
   # applies external formatting to grid, including the border, title, and source caption.
@@ -31,16 +32,19 @@ badger_finisher <- function(plot,
   img <- png::readPNG(logo_ref)
   if (aspect == "1col") {
     h <- 3.84
-    w<-3.79
+    w <-3.79
   } else if (aspect == "2col") {
-    h<-3.84
-    w<-7.83
+    h <-3.84
+    w <-7.83
   } else if (aspect == "web") {
     h <- 4
     w <- 5.8
+  } else if (aspect == "custom") {
+    h <- height
+    w <- width
   } else {
-    h<-5
-    w<-9.55
+    h <- 5
+    w <- 9.55
   }
 
 

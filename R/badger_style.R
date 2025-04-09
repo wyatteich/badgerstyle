@@ -60,7 +60,7 @@ badger_style <- function() {
     ),
     axis.title.y = ggplot2::element_text(
       vjust = 0,
-      margin = ggplot2::margin(0, -1, 0, 0)
+      margin = ggplot2::margin(0, 5, 0, 0)
     ),
     axis.text = ggplot2::element_text(
       family = font,
@@ -68,7 +68,7 @@ badger_style <- function() {
       color = text_color
     ),
     axis.text.x = ggplot2::element_text(
-      margin = ggplot2::margin(5, b = 5)
+      margin = ggplot2::margin(t=3, b = 5)
     ),
     axis.text.y = ggplot2::element_text(
       margin = ggplot2::margin(5, l = 5)
@@ -81,8 +81,8 @@ badger_style <- function() {
         angle = 40,
         length = unit(0.07, "in"),
         ends = "last",
-        type = "closed"
-      )),
+        type = "closed"),
+      margin = ggplot2:margin()),
     axis.ticks.y = ggplot2::element_blank(),
     axis.line.x = ggplot2::element_blank(),
     axis.line.y = ggplot2::element_blank(),

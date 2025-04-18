@@ -38,7 +38,7 @@ badger_style <- function() {
     # legend
     legend.position = "bottom",
     legend.margin = ggplot2::margin(t = -15, r = 0, l = 0, b = -8),
-    legend.text.align = 0,
+    #legend.text.align = 0,
     legend.background = ggplot2::element_blank(),
     legend.title = ggplot2::element_blank(),
     legend.key = ggplot2::element_blank(),
@@ -46,7 +46,8 @@ badger_style <- function() {
     legend.text = ggplot2::element_text(
       family = titlefont,
       size = 10,
-      color = text_color
+      color = text_color,
+      hjust = 0
     ),
 
     # axis

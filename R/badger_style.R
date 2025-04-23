@@ -33,11 +33,11 @@ badger_style <- function() {
 
     # margin
 
-    plot.margin = ggplot2::margin(t = 5, l = 10, r = 10, b = 10),
+    plot.margin = ggplot2::margin(t = 15, l = 10, r = 10, b = 15),
 
     # legend
     legend.position = "bottom",
-    legend.margin = ggplot2::margin(t = -15, r = 0, l = 0, b = -8),
+    legend.margin = ggplot2::margin(t = -5, r = 0, l = 0, b = 0),
     #legend.text.align = 0,
     legend.background = ggplot2::element_blank(),
     legend.title = ggplot2::element_blank(),
@@ -58,7 +58,7 @@ badger_style <- function() {
     ),
     axis.title.x = ggplot2::element_text(
       vjust = 1,
-      margin = ggplot2::margin(-2, 0, 0, 0)
+      margin = ggplot2::margin(7, 0, 0, 0)
     ),
     axis.title.y = ggplot2::element_text(
       vjust = 0,

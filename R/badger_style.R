@@ -44,7 +44,7 @@ badger_style <- function() {
     legend.key = ggplot2::element_blank(),
     legend.key.size = unit(0.4, "cm"),
     legend.text = ggplot2::element_text(
-      family = titlefont,
+      family = font,
       size = 10,
       color = text_color,
       hjust = 0

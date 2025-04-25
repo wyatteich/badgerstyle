@@ -1,6 +1,7 @@
 #' Badger Publish
 #'
 #' This function saves the completed plot as a high quality PNG
+#' Replaced by badger finisher.
 #'
 #' @param filename The desired filename for the image
 #' @param plot The plot object to be saved

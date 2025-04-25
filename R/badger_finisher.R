@@ -5,7 +5,7 @@
   #' @param head The headline for the plot
   #' @param source The source attribution of the plot.
   #' @param logo_ref The file reference for the logo.
-  #' @param filename The desired filename for the plot
+  #' @param filename The desired file name for the plot
   #' @param aspect The desired aspect ratio for the plot.
 
 
@@ -15,6 +15,7 @@ badger_finisher <- function(plot,
                             logo_ref = "C:/Users/Wyatt Eichholz/OneDrive - Badger Institute/R Reference/Badger-Institute-Icon.png",
                             filename = "plot.png",
                             aspect = c("1col", "2col", "web", "custom"),
+                            border = T,
                             height = NULL, width  = NULL) {
 
 
@@ -101,11 +102,15 @@ badger_finisher <- function(plot,
     )
   )
 
-  grid::grid.rect(.5, .5,
-                width=unit(1,"npc"),
-                height=unit(1,"npc"),
+  if (border == T) {
+    grid::grid.rect(.5, .5,
+                    width=unit(1,"npc"),
+                    height=unit(1,"npc"),
 
-                gp=grid::gpar(lwd=3, fill=NA, col="#747F81"))
+                    gp=grid::gpar(lwd=3, fill=NA, col="#747F81"))
+  }
+
+
 
   grDevices::dev.off()
 

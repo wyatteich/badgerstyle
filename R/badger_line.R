@@ -31,7 +31,7 @@ badger_line <- function(data, x, y, color_scale, width = 4) {
         data = endpoints,
         aes(x = {{x}}, y = {{y}}),
         shape = 21,
-        stroke = width * 1.04,
+        stroke = width * 1.08,
         size = width * 0.925,
         fill = "white",
         show.legend = F

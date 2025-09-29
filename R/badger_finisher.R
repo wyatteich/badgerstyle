@@ -37,7 +37,7 @@ badger_finisher <- function(plot,
     `1col` = list(h = 3.84, w = 3.79),
     `2col` = list(h = 3.84, w = 7.83),
     web = list(h = 4, w = 5.8),
-    ppt = list(h = 6.1875, w = 11),
+    ppt = list(h = 3.9375, w = 7),
     custom = list(h = height, w = width)
   )
 

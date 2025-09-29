@@ -14,9 +14,9 @@ badger_finisher <- function(plot,
                             source = "Insert Source",
                             logo_ref = "C:/Users/Wyatt Eichholz/OneDrive - Badger Institute/R Reference/Badger-Institute-Icon.png",
                             filename = "plot.png",
-                            aspect = c("1col", "2col", "web", "custom"),
+                            aspect = c("default", "1col", "2col", "web", "ppt", "custom"),
                             border = T,
-                            height = NULL, width  = NULL) {
+                            height = 5, width  = 9.55) {
 
 
   # applies external formatting to grid, including the border, title, and source caption.
@@ -31,22 +31,18 @@ badger_finisher <- function(plot,
     #cowplot::draw_image(logo_ref, x = 1, y = 0, hjust = 1, vjust = 1, width = 0.05, height = 0.05)
 
   img <- png::readPNG(logo_ref)
-  if (aspect == "1col") {
-    h <- 3.84
-    w <-3.79
-  } else if (aspect == "2col") {
-    h <-3.84
-    w <-7.83
-  } else if (aspect == "web") {
-    h <- 4
-    w <- 5.8
-  } else if (aspect == "custom") {
-    h <- height
-    w <- width
-  } else {
-    h <- 5
-    w <- 9.55
-  }
+
+  aspect_ratios <- list(
+    default = list(h = 5, w = 9.55),
+    `1col` = list(h = 3.84, w = 3.79),
+    `2col` = list(h = 3.84, w = 7.83),
+    web = list(h = 4, w = 5.8),
+    ppt = list(h = 6.1875, w = 11),
+    custom = list(h = height, w = width)
+  )
+
+  h <- aspect_ratios[[aspect]]$h
+  w <- aspect_ratios[[aspect]]$w
 
 
 

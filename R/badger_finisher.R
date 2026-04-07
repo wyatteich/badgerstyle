@@ -12,15 +12,18 @@
 badger_finisher <- function(plot,
                             head = "Insert Headline",
                             source = "Insert Source",
-                            logo_ref = "C:/Users/Wyatt Eichholz/OneDrive - Badger Institute/R Reference/Badger-Institute-Icon.png",
+                            logo_ref = system.file("img", "Badger-Institute-Icon.png", package = "badgerstyle"),
                             filename = "plot.png",
                             aspect = c("default", "1col", "2col", "web", "ppt", "custom"),
                             border = T,
                             height = 5, width  = 9.55) {
 
-
-  # applies external formatting to grid, including the border, title, and source caption.
-  extrafont::loadfonts(device = "win", quiet = T)
+  # cross-platform font loading
+  if (.Platform$OS.type == "windows") {
+    extrafont::loadfonts(device = "win", quiet = TRUE)
+  } else {
+    extrafont::loadfonts(quiet = TRUE)
+  }
 
   titlefont <- "Franklin Gothic Demi Cond"
   font <- "Franklin Gothic Medium Cond"

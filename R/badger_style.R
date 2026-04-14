@@ -2,7 +2,7 @@
 #'
 #' This creates a ggplot theme object that applies Badger Institute's style.
 
-badger_style <- function() {
+badger_style <- function(horizontal_gridlines = T, vertical_gridlines = F) {
   extrafont::loadfonts(device = "win", quiet = T)
 
   titlefont <- "Franklin Gothic Demi Cond"
@@ -90,9 +90,12 @@ badger_style <- function() {
 
     # panel
     panel.grid.minor = ggplot2::element_blank(),
-    panel.grid.major.y = ggplot2::element_line(color = "#747F81"),
-    panel.grid.major.x = ggplot2::element_blank(),
+
+    panel.grid.major.y = if (horizontal_gridlines) ggplot2::element_line(color = "#747F81") else ggplot2::element_blank(),
+    panel.grid.major.x = if (vertical_gridlines) ggplot2::element_line(color = "#747F81") else ggplot2::element_blank(),
+
     panel.background = ggplot2::element_blank(),
+
 
     # strip
     strip.background = ggplot2::element_rect(fill = "white"),

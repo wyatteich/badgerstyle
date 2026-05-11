@@ -8,8 +8,12 @@ badger_finisher(
   plot,
   head = "Insert Headline",
   source = "Insert Source",
-  logo_ref =
-    "C:/Users/Wyatt Eichholz/OneDrive - Badger Institute/R Reference/Badger-Institute-Icon.png"
+  logo_ref = system.file("img", "Badger-Institute-Icon.png", package = "badgerstyle"),
+  filename = "plot.png",
+  aspect = c("default", "1col", "2col", "web", "ppt", "custom"),
+  border = T,
+  height = 5,
+  width = 9.55
 )
 }
 \arguments{
@@ -18,6 +22,12 @@ badger_finisher(
 \item{head}{The headline for the plot}
 
 \item{source}{The source attribution of the plot.}
+
+\item{logo_ref}{The file reference for the logo.}
+
+\item{filename}{The desired file name for the plot}
+
+\item{aspect}{The desired aspect ratio for the plot.}
 }
 \description{
 This function places the finishing touches on a Badger graph.

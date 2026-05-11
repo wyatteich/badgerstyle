@@ -4,7 +4,7 @@
 \alias{badger_publish}
 \title{Badger Publish}
 \usage{
-badger_publish(filename = "plot.png", plot, columns = c(1, 2))
+badger_publish(filename = "plot.png", plot, aspect = c("1col", "2col", "web"))
 }
 \arguments{
 \item{filename}{The desired filename for the image}
@@ -15,4 +15,5 @@ badger_publish(filename = "plot.png", plot, columns = c(1, 2))
 }
 \description{
 This function saves the completed plot as a high quality PNG
+Replaced by badger finisher.
 }

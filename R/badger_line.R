@@ -5,9 +5,13 @@
 #' for legibility, followed by the colored line/points on top. Returns a list
 #' of geoms that can be added to a ggplot object with \code{+}.
 #'
+#' Endpoints are computed per group on rows where \code{y_var} is non-missing,
+#' so series that start late, end early, or have internal NAs still receive
+#' terminal points at their own first and last observed data point.
+#'
 #' @param plot A ggplot object. Used to inherit \code{df}, \code{group_var},
-#'   and/or \code{x_var} from the plot's \code{data} and \code{mapping} if
-#'   those arguments are not supplied explicitly.
+#'   \code{x_var}, and/or \code{y_var} from the plot's \code{data} and
+#'   \code{mapping} if those arguments are not supplied explicitly.
 #' @param df A data frame. Defaults to \code{plot$data} if not supplied.
 #' @param lw Numeric. Base line width. Backdrop is drawn at \code{lw * 1.45}.
 #'   Defaults to \code{2.5}.
@@ -15,35 +19,21 @@
 #'   (typically mapped to \code{color}). Defaults to the \code{colour} mapping
 #'   of \code{plot}.
 #' @param x_var Unquoted or quoted variable name for the x-axis. Defaults to
-#'   the \code{x} mapping of \code{plot}. Passed to \code{find_endpoints()} to
-#'   identify min/max x positions for terminal points.
+#'   the \code{x} mapping of \code{plot}.
+#' @param y_var Unquoted or quoted variable name for the y-axis. Defaults to
+#'   the \code{y} mapping of \code{plot}. Used to drop NA rows before locating
+#'   each group's first and last observed data point.
 #'
 #' @return A list of ggplot layer objects, addable to a ggplot via \code{+}.
 #'
 #' @seealso \code{\link{find_endpoints}}
-#'
-#' @examples
-#' \dontrun{
-#' p <- df |>
-#'   ggplot(aes(x = year, y = rank, color = State)) +
-#'   badger_style()
-#'
-#' # Inherit all mappings from plot
-#' p + badger_lines(p)
-#'
-#' # Override line width
-#' p + badger_lines(p, lw = 3)
-#'
-#' # Supply variables explicitly
-#' p + badger_lines(p, group_var = State, x_var = year)
-#' }
 #'
 #' @importFrom ggplot2 geom_line geom_point
 #' @importFrom dplyr filter
 #' @importFrom rlang as_label sym
 #'
 #' @export
-badger_line <- function(plot, df, lw = 2.5, group_var, x_var){
+badger_line <- function(plot, df, lw = 2.5, group_var, x_var, y_var){
 
   if(missing(df)) df <- plot$data
 
@@ -59,22 +49,31 @@ badger_line <- function(plot, df, lw = 2.5, group_var, x_var){
     x_var <- as_label(substitute(x_var))
   }
 
+  if(missing(y_var)) {
+    y_var <- as_label(plot$mapping$y)
+  } else {
+    y_var <- as_label(substitute(y_var))
+  }
+
   # backdrop width factor
   bwf <- 1.45
   geom_list <- list()
 
   for(item in unique(df[[group_var]])) {
 
+    grp_df <- filter(df, .data[[group_var]] == item)
+    grp_ends <- find_endpoints(grp_df, !!sym(x_var), !!sym(y_var))
+
     geom_list <- c(geom_list, list(
       geom_line(
-        data = filter(df, .data[[group_var]] == item),
+        data = grp_df,
         linewidth = lw * bwf,
         lineend = "round",
         color = "white",
         show.legend = F,
       ),
       geom_point(
-        data = filter(find_endpoints(df, !!sym(x_var)), .data[[group_var]] == item),
+        data = grp_ends,
         shape = 21,
         size = lw * bwf,
         stroke = lw + 0.5,
@@ -83,12 +82,12 @@ badger_line <- function(plot, df, lw = 2.5, group_var, x_var){
         show.legend = F,
       ),
       geom_line(
-        data = filter(df, .data[[group_var]] == item),
+        data = grp_df,
         linewidth = lw,
         lineend = "round",
       ),
       geom_point(
-        data = filter(find_endpoints(df, !!sym(x_var)), .data[[group_var]] == item),
+        data = grp_ends,
         shape = 21,
         size = lw,
         stroke = lw + 0.5,

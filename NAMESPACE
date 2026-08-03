@@ -1,1 +1,5 @@
 exportPattern("^[[:alpha:]]+")
+S3method(ggplot_add,badger_dynamic_legend)
+S3method(ggplot_add,badger_line)
+importFrom(ggplot2,ggplot_add)
+importFrom(rlang,.data)

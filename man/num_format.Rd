@@ -2,7 +2,7 @@
 % Please edit documentation in R/num_format.R
 \name{num_format}
 \alias{num_format}
-\title{Converts}
+\title{Format a numeric sequence with abbreviated units}
 \usage{
 num_format(
   from = 1,
@@ -13,16 +13,27 @@ num_format(
 )
 }
 \arguments{
-\item{from}{start of range}
+\item{from, to}{Numeric endpoints of the sequence to label.}
 
-\item{to}{end of range}
+\item{by}{Numeric interval between values.}
 
-\item{by}{interval between tick marks}
+\item{suffix}{One of `"k"`, `"m"`, or `"b"`, selecting thousands,
+millions, or billions. Supply a single value.}
 
-\item{suffix}{the denomination to convert, and the suffix to attack to the number}
-
-\item{currency}{add a currency symbol to affix to the front of the value.}
+\item{currency}{Optional character prefix such as `"$"`.}
+}
+\value{
+A character vector of formatted labels.
 }
 \description{
-Converts
+Creates labels for an evenly spaced numeric sequence, scaling each value to
+thousands, millions, or billions and appending the requested suffix.
+}
+\examples{
+num_format(0, 3e6, 1e6, suffix = "m", currency = "$")
+# [1] "$0m" "$1m" "$2m" "$3m"
+
+}
+\seealso{
+[lab_kmb()]
 }

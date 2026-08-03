@@ -2,7 +2,7 @@
 % Please edit documentation in R/badger_finisher.R
 \name{badger_finisher}
 \alias{badger_finisher}
-\title{Finisher}
+\title{Save a publication-ready Badger graphic}
 \usage{
 badger_finisher(
   plot,
@@ -11,24 +11,53 @@ badger_finisher(
   logo_ref = system.file("img", "Badger-Institute-Icon.png", package = "badgerstyle"),
   filename = "plot.png",
   aspect = c("default", "1col", "2col", "web", "ppt", "custom"),
-  border = T,
+  border = TRUE,
   height = 5,
   width = 9.55
 )
 }
 \arguments{
-\item{plot}{The ggplot2 object that the finisher will "spruce up"}
+\item{plot}{A ggplot object to render.}
 
-\item{head}{The headline for the plot}
+\item{head}{Character string used as the headline above the plot.}
 
-\item{source}{The source attribution of the plot.}
+\item{source}{Character string used as the source line below the plot.}
 
-\item{logo_ref}{The file reference for the logo.}
+\item{logo_ref}{Path to the PNG logo. Defaults to the Badger Institute icon
+installed with the package.}
 
-\item{filename}{The desired file name for the plot}
+\item{filename}{Output path for the PNG file.}
 
-\item{aspect}{The desired aspect ratio for the plot.}
+\item{aspect}{One of `"default"`, `"1col"`, `"2col"`, `"web"`, `"ppt"`,
+or `"custom"`. The preset determines the output dimensions in inches.}
+
+\item{border}{Logical; draw a gray border around the finished graphic.}
+
+\item{height, width}{Custom output dimensions in inches. Used only when
+`aspect = "custom"`.}
+}
+\value{
+Invisibly returns the result of closing the PNG graphics device.
 }
 \description{
-This function places the finishing touches on a Badger graph.
+Renders a ggplot to a high-resolution PNG with a separate headline, source
+line, Badger Institute icon, and optional border. The output dimensions can
+use a publication preset or custom dimensions.
+}
+\examples{
+\dontrun{
+library(ggplot2)
+p <- ggplot(mtcars, aes(wt, mpg)) + geom_point() + badger_style()
+badger_finisher(
+  p,
+  head = "Fuel economy falls as vehicle weight rises",
+  source = "Source: Motor Trend",
+  filename = "fuel-economy.png",
+  aspect = "web"
+)
+}
+
+}
+\seealso{
+[badger_style()], [badger_publish()]
 }

@@ -2,19 +2,34 @@
 % Please edit documentation in R/geom_endpoint.R
 \name{geom_endpoint}
 \alias{geom_endpoint}
-\title{geom_endpoint}
+\title{Add styled endpoints to a line}
 \usage{
 geom_endpoint(data, x, y, color)
 }
 \arguments{
-\item{data}{the data frame that the plot is based on}
+\item{data}{A data frame containing the plotted observations.}
 
-\item{x}{the variable for the x axis}
+\item{x}{Unquoted column mapped to the x-axis.}
 
-\item{y}{the variable for the y axis}
+\item{y}{Unquoted column mapped to the y-axis.}
 
-\item{color}{the color of the endpoints}
+\item{color}{A fixed color for the endpoint outlines.}
+}
+\value{
+A ggplot2 point layer addable to a plot with `+`.
 }
 \description{
-This function adds endpoints a line in Badger's signature style
+Selects observations at the minimum and maximum x-values and returns a
+ggplot point layer using Badger's white-filled endpoint style.
+}
+\examples{
+library(ggplot2)
+d <- data.frame(year = 2020:2024, value = c(2, 4, 3, 5, 6))
+ggplot(d, aes(year, value)) +
+  geom_line() +
+  geom_endpoint(d, year, value, color = "#2F5496")
+
+}
+\seealso{
+[find_endpoints()]
 }

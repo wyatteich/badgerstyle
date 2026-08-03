@@ -1,14 +1,30 @@
-#' Badger Publish
+#' Save a Badger graphic using a legacy size preset
 #'
-#' This function saves the completed plot as a high quality PNG
-#' Replaced by badger finisher.
+#' Saves a plot as a high-resolution PNG using one of the original publication
+#' size presets. New code should generally use [badger_finisher()], which also
+#' adds the headline, source line, logo, and optional border.
 #'
-#' @param filename The desired filename for the image
-#' @param plot The plot object to be saved
-#' @param columns Whether the size parameters should be set for a one column graphic, or two
+#' @param filename Output path for the PNG file.
+#' @param plot A ggplot or grid grob to render.
+#' @param aspect One of `"1col"`, `"2col"`, or `"web"`, controlling the
+#'   output dimensions in inches.
+#'
+#' @return Invisibly returns the result of closing the PNG graphics device.
+#'
+#' @examples
+#' \dontrun{
+#' library(ggplot2)
+#' p <- ggplot(mtcars, aes(wt, mpg)) + geom_point()
+#' badger_publish("fuel-economy.png", p, aspect = "web")
+#' }
+#'
+#' @seealso [badger_finisher()]
+#' @export
 
 badger_publish <- function(filename = "plot.png", plot, aspect = c("1col", "2col", "web")) {
   # will format the size of the graphic according to publisher size specifications
+
+  aspect <- match.arg(aspect)
 
   if (aspect == "1col") {
     h <- 3.84
@@ -35,12 +51,12 @@ badger_publish <- function(filename = "plot.png", plot, aspect = c("1col", "2col
   # )
 
 
-  png(filename = filename,
-      width = w,
-      height = h,
-      unit = "in",
-      res = 864)
-  grid.newpage()
-  grid.draw(plot)
-  dev.off()
+  grDevices::png(filename = filename,
+                 width = w,
+                 height = h,
+                 unit = "in",
+                 res = 864)
+  grid::grid.newpage()
+  grid::grid.draw(plot)
+  invisible(grDevices::dev.off())
 }

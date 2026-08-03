@@ -1,19 +1,22 @@
 Package: badgerstyle
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Badger Institute Graphics and Table Styles
 Version: 0.1.0
 Authors@R: c(
     person(
-      "Jane", "Doe",
-      email = "jane@example.com",
+      "Wyatt", "Eichholz",
+      email = "30613006+wyatteich@users.noreply.github.com",
       role = c("aut", "cre")
     )
   )
-Description: More about what it does (maybe more than one line).
-    Continuation lines should be indented.
-License: What license is it under?
+Description: Tools for creating Badger Institute graphics and tables.
+    Provides a ggplot2 theme, layered line and endpoint styling,
+    collision-free right-side legends, publication helpers, axis-label
+    formatters, and styled Excel workbook output.
+License: file LICENSE
+URL: https://github.com/wyatteich/badgerstyle
+BugReports: https://github.com/wyatteich/badgerstyle/issues
 Encoding: UTF-8
-LazyData: true
 RoxygenNote: 7.3.2
 Imports: 
     dplyr,

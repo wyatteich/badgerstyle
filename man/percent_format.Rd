@@ -2,17 +2,24 @@
 % Please edit documentation in R/percent_format.R
 \name{percent_format}
 \alias{percent_format}
-\title{Converts a number into a percent}
+\title{Format a numeric sequence as percentages}
 \usage{
 percent_format(from = 1, to = 1, by = 1)
 }
 \arguments{
-\item{from}{start of range}
+\item{from, to}{Numeric endpoints of the sequence to label.}
 
-\item{to}{end of range}
-
-\item{by}{interval between tick marks}
+\item{by}{Numeric interval between values.}
+}
+\value{
+A character vector of percentage labels.
 }
 \description{
-Converts a number into a percent
+Creates labels for an evenly spaced sequence of proportions by multiplying
+each value by 100 and appending a percent sign.
+}
+\examples{
+percent_format(0, 0.1, 0.02)
+# [1] "0\%" "2\%" "4\%" "6\%" "8\%" "10\%"
+
 }

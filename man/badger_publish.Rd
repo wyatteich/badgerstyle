@@ -2,18 +2,34 @@
 % Please edit documentation in R/badger_publish.R
 \name{badger_publish}
 \alias{badger_publish}
-\title{Badger Publish}
+\title{Save a Badger graphic using a legacy size preset}
 \usage{
 badger_publish(filename = "plot.png", plot, aspect = c("1col", "2col", "web"))
 }
 \arguments{
-\item{filename}{The desired filename for the image}
+\item{filename}{Output path for the PNG file.}
 
-\item{plot}{The plot object to be saved}
+\item{plot}{A ggplot or grid grob to render.}
 
-\item{columns}{Whether the size parameters should be set for a one column graphic, or two}
+\item{aspect}{One of `"1col"`, `"2col"`, or `"web"`, controlling the
+output dimensions in inches.}
+}
+\value{
+Invisibly returns the result of closing the PNG graphics device.
 }
 \description{
-This function saves the completed plot as a high quality PNG
-Replaced by badger finisher.
+Saves a plot as a high-resolution PNG using one of the original publication
+size presets. New code should generally use [badger_finisher()], which also
+adds the headline, source line, logo, and optional border.
+}
+\examples{
+\dontrun{
+library(ggplot2)
+p <- ggplot(mtcars, aes(wt, mpg)) + geom_point()
+badger_publish("fuel-economy.png", p, aspect = "web")
+}
+
+}
+\seealso{
+[badger_finisher()]
 }

@@ -1,12 +1,38 @@
-  #' Finisher
-  #'
-  #' This function places the finishing touches on a Badger graph.
-  #' @param plot The ggplot2 object that the finisher will "spruce up"
-  #' @param head The headline for the plot
-  #' @param source The source attribution of the plot.
-  #' @param logo_ref The file reference for the logo.
-  #' @param filename The desired file name for the plot
-  #' @param aspect The desired aspect ratio for the plot.
+#' Save a publication-ready Badger graphic
+#'
+#' Renders a ggplot to a high-resolution PNG with a separate headline, source
+#' line, Badger Institute icon, and optional border. The output dimensions can
+#' use a publication preset or custom dimensions.
+#'
+#' @param plot A ggplot object to render.
+#' @param head Character string used as the headline above the plot.
+#' @param source Character string used as the source line below the plot.
+#' @param logo_ref Path to the PNG logo. Defaults to the Badger Institute icon
+#'   installed with the package.
+#' @param filename Output path for the PNG file.
+#' @param aspect One of `"default"`, `"1col"`, `"2col"`, `"web"`, `"ppt"`,
+#'   or `"custom"`. The preset determines the output dimensions in inches.
+#' @param border Logical; draw a gray border around the finished graphic.
+#' @param height,width Custom output dimensions in inches. Used only when
+#'   `aspect = "custom"`.
+#'
+#' @return Invisibly returns the result of closing the PNG graphics device.
+#'
+#' @examples
+#' \dontrun{
+#' library(ggplot2)
+#' p <- ggplot(mtcars, aes(wt, mpg)) + geom_point() + badger_style()
+#' badger_finisher(
+#'   p,
+#'   head = "Fuel economy falls as vehicle weight rises",
+#'   source = "Source: Motor Trend",
+#'   filename = "fuel-economy.png",
+#'   aspect = "web"
+#' )
+#' }
+#'
+#' @seealso [badger_style()], [badger_publish()]
+#' @export
 
 
 badger_finisher <- function(plot,
@@ -15,8 +41,10 @@ badger_finisher <- function(plot,
                             logo_ref = system.file("img", "Badger-Institute-Icon.png", package = "badgerstyle"),
                             filename = "plot.png",
                             aspect = c("default", "1col", "2col", "web", "ppt", "custom"),
-                            border = T,
+                            border = TRUE,
                             height = 5, width  = 9.55) {
+
+  aspect <- match.arg(aspect)
 
   # cross-platform font loading
   if (.Platform$OS.type == "windows") {
@@ -92,26 +120,26 @@ badger_finisher <- function(plot,
         x = 0.975, hjust = 1,
         y = 0.6, vjust = 0,
         interpolate = TRUE,
-        width = unit(0.2, units = "in"),
-        height = unit(0.2, units = "in")
+        width = grid::unit(0.2, units = "in"),
+        height = grid::unit(0.2, units = "in")
       ),
 
-      widths = unit(c(2,1), "null"),
+      widths = grid::unit(c(2,1), "null"),
       ncol = 2
     )
   )
 
-  if (border == T) {
+  if (border) {
     grid::grid.rect(.5, .5,
-                    width=unit(1,"npc"),
-                    height=unit(1,"npc"),
+                    width=grid::unit(1,"npc"),
+                    height=grid::unit(1,"npc"),
 
                     gp=grid::gpar(lwd=3, fill=NA, col="#747F81"))
   }
 
 
 
-  grDevices::dev.off()
+  invisible(grDevices::dev.off())
 
   #return(final)
 }

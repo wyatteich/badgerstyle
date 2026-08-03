@@ -2,17 +2,24 @@
 % Please edit documentation in R/year_format.R
 \name{year_format}
 \alias{year_format}
-\title{Converts a year in the format YYYY to 'YY.}
+\title{Format a sequence of years with abbreviated labels}
 \usage{
 year_format(from = 1, to = 1, by = 1)
 }
 \arguments{
-\item{from}{the start year}
+\item{from, to}{Numeric endpoints of the year sequence.}
 
-\item{to}{the end year}
-
-\item{by}{the interval between years}
+\item{by}{Numeric interval between years.}
+}
+\value{
+A character vector of abbreviated year labels.
 }
 \description{
-Converts a year in the format YYYY to 'YY.
+Creates labels containing a right single quotation mark followed by the
+final two digits of each year.
+}
+\examples{
+year_format(2020, 2024, 2)
+# [1] "’20" "’22" "’24"
+
 }

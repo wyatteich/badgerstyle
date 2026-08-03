@@ -1,9 +1,26 @@
-#' Badger Style
+#' Apply the Badger Institute ggplot style
 #'
-#' This creates a ggplot theme object that applies Badger Institute's style.
+#' Creates the standard Badger Institute ggplot theme and disables clipping so
+#' annotations and dynamic legends can extend beyond the panel.
+#'
+#' @param horizontal_gridlines Logical; draw horizontal major gridlines.
+#' @param vertical_gridlines Logical; draw vertical major gridlines.
+#'
+#' @return A list containing a ggplot theme and a Cartesian coordinate system.
+#'   Add the result to a ggplot with `+`.
+#'
+#' @examples
+#' \dontrun{
+#' library(ggplot2)
+#' ggplot(mtcars, aes(wt, mpg)) +
+#'   geom_point() +
+#'   badger_style(horizontal_gridlines = TRUE)
+#' }
+#'
+#' @export
 
-badger_style <- function(horizontal_gridlines = T, vertical_gridlines = F) {
-  extrafont::loadfonts(device = "win", quiet = T)
+badger_style <- function(horizontal_gridlines = TRUE, vertical_gridlines = FALSE) {
+  extrafont::loadfonts(device = "win", quiet = TRUE)
 
   titlefont <- "Franklin Gothic Demi Cond"
   font <- "Franklin Gothic Medium Cond"
@@ -42,7 +59,7 @@ badger_style <- function(horizontal_gridlines = T, vertical_gridlines = F) {
     legend.background = ggplot2::element_blank(),
     legend.title = ggplot2::element_blank(),
     legend.key = ggplot2::element_blank(),
-    legend.key.size = unit(0.4, "cm"),
+    legend.key.size = grid::unit(0.4, "cm"),
     legend.text = ggplot2::element_text(
       family = font,
       size = 10,
@@ -81,7 +98,7 @@ badger_style <- function(horizontal_gridlines = T, vertical_gridlines = F) {
       linewidth = 0.3,
       arrow = grid::arrow(
         angle = 40,
-        length = unit(0.07, "in"),
+        length = grid::unit(0.07, "in"),
         ends = "last",
         type = "closed")),
     axis.ticks.y = ggplot2::element_blank(),
@@ -103,7 +120,7 @@ badger_style <- function(horizontal_gridlines = T, vertical_gridlines = F) {
   )
 
 
-  clip <- coord_cartesian(clip = "off")
+  clip <- ggplot2::coord_cartesian(clip = "off")
 
   list(badger_theme, clip)
 }

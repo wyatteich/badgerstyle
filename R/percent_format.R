@@ -1,9 +1,18 @@
-# Percent Format
-
-#' Converts a number into a percent
-#' @param from start of range
-#' @param to end of range
-#' @param by interval between tick marks
+#' Format a numeric sequence as percentages
+#'
+#' Creates labels for an evenly spaced sequence of proportions by multiplying
+#' each value by 100 and appending a percent sign.
+#'
+#' @param from,to Numeric endpoints of the sequence to label.
+#' @param by Numeric interval between values.
+#'
+#' @return A character vector of percentage labels.
+#'
+#' @examples
+#' percent_format(0, 0.1, 0.02)
+#' # [1] "0%" "2%" "4%" "6%" "8%" "10%"
+#'
+#' @export
 
 
 percent_format <- function(from = 1, to = 1, by = 1) {
@@ -11,5 +20,3 @@ percent_format <- function(from = 1, to = 1, by = 1) {
 
   return(labs)
 }
-
-percent_format(from = 0, to = 0.1, by = 0.02)

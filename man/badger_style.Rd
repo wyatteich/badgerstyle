@@ -2,10 +2,29 @@
 % Please edit documentation in R/badger_style.R
 \name{badger_style}
 \alias{badger_style}
-\title{Badger Style}
+\title{Apply the Badger Institute ggplot style}
 \usage{
-badger_style(horizontal_gridlines = T, vertical_gridlines = F)
+badger_style(horizontal_gridlines = TRUE, vertical_gridlines = FALSE)
+}
+\arguments{
+\item{horizontal_gridlines}{Logical; draw horizontal major gridlines.}
+
+\item{vertical_gridlines}{Logical; draw vertical major gridlines.}
+}
+\value{
+A list containing a ggplot theme and a Cartesian coordinate system.
+  Add the result to a ggplot with `+`.
 }
 \description{
-This creates a ggplot theme object that applies Badger Institute's style.
+Creates the standard Badger Institute ggplot theme and disables clipping so
+annotations and dynamic legends can extend beyond the panel.
+}
+\examples{
+\dontrun{
+library(ggplot2)
+ggplot(mtcars, aes(wt, mpg)) +
+  geom_point() +
+  badger_style(horizontal_gridlines = TRUE)
+}
+
 }

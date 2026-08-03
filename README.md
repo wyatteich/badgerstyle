@@ -1,7 +1,22 @@
 # badgerstyle
-A custom graphing package for ggplot in R to implement the unique Badger style
 
-Pretty cool how R-Studio can also edit markdown files. 
+`badgerstyle` provides reusable R tools for producing Badger Institute
+graphics and tables. It includes a ggplot2 theme, layered lines and endpoints,
+collision-free right-side labels, publication helpers, axis-label formatters,
+and styled Excel output.
+
+## Installation
+
+Install the development version from GitHub:
+
+```r
+remotes::install_github("wyatteich/badgerstyle")
+library(badgerstyle)
+```
+
+The graphics functions use the Badger Institute's Franklin Gothic fonts.
+Install those fonts and register them with `extrafont` before producing final
+publication files.
 
 ## Dynamic right-side legends
 
@@ -40,3 +55,34 @@ ggplot(df, aes(year, value, colour = series)) +
 
 It draws the colored lines and endpoints itself, including the white backdrop,
 so a separate `geom_line()` is not needed.
+
+## Publication output
+
+Use `badger_finisher()` to write a high-resolution PNG with a headline, source
+line, Badger icon, and optional border:
+
+```r
+badger_finisher(
+  plot,
+  head = "Wisconsin employment continues to grow",
+  source = "Source: U.S. Bureau of Labor Statistics",
+  filename = "employment.png",
+  aspect = "web"
+)
+```
+
+## Styled Excel tables
+
+`write_badger_table()` writes a data frame to an `.xlsx` file with Badger
+header, font, alignment, and number formatting:
+
+```r
+write_badger_table(
+  data,
+  "table.xlsx",
+  col_types = c(rate = "percent", population = "pop"),
+  source = "Source: U.S. Census Bureau"
+)
+```
+
+Run `help(package = "badgerstyle")` for the complete function index.

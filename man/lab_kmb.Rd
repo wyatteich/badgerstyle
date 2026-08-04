@@ -14,7 +14,8 @@ A character vector of formatted labels.
 }
 \description{
 A label function for use with ggplot2 scales (or standalone) that
-abbreviates numbers into human-readable K, M, B notation.
+abbreviates numbers into human-readable K, M, B notation. Missing and
+infinite values are retained as missing, `"Inf"`, or `"-Inf"`.
 }
 \examples{
 lab_kmb(c(500, 1500, 2.5e6, 7.8e9))

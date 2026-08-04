@@ -29,8 +29,8 @@
 #'   of `group`. Unmatched groups retain their original labels.
 #' @param by Optional character vector of facet columns. Endpoint selection and
 #'   label spacing are performed independently within each combination of
-#'   these columns, and the columns are retained so ggplot places each legend
-#'   in the correct facet.
+#'   these columns. When omitted, simple `facet_wrap()` and `facet_grid()`
+#'   variables are inferred from `plot`.
 #' @param min_gap Minimum vertical distance between labels, in y-axis units.
 #'   The default is `min_gap_fraction` of the label range.
 #' @param min_gap_fraction Fraction of the label range used when `min_gap` is
@@ -56,6 +56,7 @@
 #' @param arrow_linewidth,arrow_length,arrow_type Arrow styling. `arrow_length`
 #'   is measured in centimeters.
 #' @param mask_fill Fill color used to cover gridlines in the label area.
+#'   Defaults to the plot's panel-background fill, falling back to white.
 #' @importFrom rlang .data
 #'
 #' @return When plot information must be inherited, a deferred component that
@@ -117,7 +118,7 @@ badger_dynamic_legend <- function(
     arrow_linewidth = 0.55,
     arrow_length = 0.11,
     arrow_type = "closed",
-    mask_fill = "white") {
+    mask_fill = NULL) {
 
   deferred_call <- match.call(expand.dots = FALSE)
   needs_plot <- is.null(plot) && (
@@ -164,6 +165,8 @@ badger_dynamic_legend <- function(
     .badger_legend_column(label_quo, plot = NULL, aesthetic = NULL, arg = "label")
   }
 
+  if (is.null(by)) by <- .badger_infer_facet_vars(plot, names(data))
+
   required <- unique(c(x_name, y_name, group_name, label_name, by))
   absent <- setdiff(required, names(data))
   if (length(absent) > 0L) {
@@ -208,13 +211,17 @@ badger_dynamic_legend <- function(
   y_values <- suppressWarnings(as.numeric(data[[y_name]]))
   x_values <- data[[x_name]]
   x_numeric <- suppressWarnings(as.numeric(x_values))
-  valid <- !is.na(x_numeric) & is.finite(y_values) & !is.na(data[[group_name]])
+  x_transformer <- .badger_x_transformer(plot, x_values)
+  x_transformed <- x_transformer$transform(x_numeric)
+  valid <- !is.na(x_numeric) & is.finite(x_transformed) &
+    is.finite(y_values) & !is.na(data[[group_name]])
   if (!any(valid)) {
     stop("No rows have valid x, y, and group values.", call. = FALSE)
   }
 
   data <- data[valid, , drop = FALSE]
   data$.badger_x_numeric <- x_numeric[valid]
+  data$.badger_x_transformed <- x_transformed[valid]
   data$.badger_y_numeric <- y_values[valid]
 
   y_limits <- .badger_legend_y_limits(y_limits, plot, data$.badger_y_numeric)
@@ -234,7 +241,7 @@ badger_dynamic_legend <- function(
     stop("`min_gap` must be a non-negative finite scalar.", call. = FALSE)
   }
 
-  panel_rows <- .badger_panel_rows(data, by)
+  panel_rows <- .badger_split_rows(data, by)
   panel_results <- lapply(panel_rows, function(rows) {
     panel <- data[rows, , drop = FALSE]
     group_keys <- unique(as.character(panel[[group_name]]))
@@ -277,23 +284,50 @@ badger_dynamic_legend <- function(
 
     panel_min_x <- min(panel$.badger_x_numeric)
     panel_max_x <- max(panel$.badger_x_numeric)
-    panel_span <- panel_max_x - panel_min_x
-    if (!is.finite(panel_span) || panel_span <= 0) panel_span <- 1
-    offset <- function(value) {
-      if (offset_unit == "fraction") value * panel_span else value
+    panel_min_transformed <- min(panel$.badger_x_transformed)
+    panel_max_transformed <- max(panel$.badger_x_transformed)
+    visible_x_limits <- .badger_plot_limits(plot, "x")
+    if (!is.null(visible_x_limits)) {
+      visible_transformed <- x_transformer$transform(visible_x_limits)
+      if (all(is.finite(visible_transformed))) {
+        panel_min_transformed <- min(visible_transformed)
+        panel_max_transformed <- max(visible_transformed)
+      }
+    }
+    panel_span_transformed <- panel_max_transformed - panel_min_transformed
+    if (!is.finite(panel_span_transformed) || panel_span_transformed <= 0) {
+      panel_span_transformed <- 1
+    }
+    position <- function(raw, transformed, value) {
+      if (offset_unit == "fraction") {
+        x_transformer$inverse(transformed + value * panel_span_transformed)
+      } else {
+        raw + value
+      }
     }
 
-    endpoints$.badger_label_x_numeric <- panel_max_x + offset(label_offset)
-    endpoints$.badger_arrow_start_numeric <- panel_max_x + offset(arrow_start_offset)
-    endpoints$.badger_arrow_end_numeric <-
-      endpoints$.badger_x_numeric + offset(arrow_end_offset)
+    endpoints$.badger_label_x_numeric <- position(
+      panel_max_x, max(panel$.badger_x_transformed), label_offset
+    )
+    endpoints$.badger_arrow_start_numeric <- position(
+      panel_max_x, max(panel$.badger_x_transformed), arrow_start_offset
+    )
+    endpoints$.badger_arrow_end_numeric <- position(
+      endpoints$.badger_x_numeric,
+      endpoints$.badger_x_transformed,
+      arrow_end_offset
+    )
 
     panel_key <- panel[1L, by, drop = FALSE]
     spacer <- panel_key
-    spacer$.badger_right_x_numeric <- panel_max_x + offset(right_space)
+    spacer$.badger_right_x_numeric <- position(
+      panel_max_x, max(panel$.badger_x_transformed), right_space
+    )
     spacer$.badger_mid_y <- mean(y_limits)
     mask_data <- panel_key
-    mask_data$.badger_mask_x_numeric <- panel_max_x + offset(mask_offset)
+    mask_data$.badger_mask_x_numeric <- position(
+      panel_max_x, max(panel$.badger_x_transformed), mask_offset
+    )
 
     list(endpoints = endpoints, spacer = spacer, mask = mask_data)
   })
@@ -342,6 +376,8 @@ badger_dynamic_legend <- function(
     plot,
     max(endpoints$.badger_label_x_numeric, na.rm = TRUE)
   )
+
+  if (is.null(mask_fill)) mask_fill <- .badger_panel_fill(plot)
 
   layers <- list(
     space = ggplot2::geom_blank(
@@ -451,17 +487,13 @@ ggplot_add.badger_dynamic_legend <- function(object, plot, object_name) {
 }
 
 .badger_legend_y_limits <- function(y_limits, plot, y) {
-  if (is.null(y_limits) && !is.null(plot)) {
-    scale <- plot$scales$get_scales("y")
-    if (!is.null(scale) && !is.function(scale$limits)) y_limits <- scale$limits
-  }
-  if (is.null(y_limits) || length(y_limits) != 2L || any(!is.finite(y_limits))) {
-    y_limits <- range(y, finite = TRUE)
-  }
-  y_limits <- as.numeric(y_limits)
-  if (length(y_limits) != 2L || any(!is.finite(y_limits))) {
-    stop("`y_limits` must contain two finite values.", call. = FALSE)
-  }
+  data_limits <- range(y, finite = TRUE)
+  if (is.null(y_limits)) y_limits <- .badger_plot_limits(plot, "y")
+  if (is.null(y_limits)) y_limits <- data_limits
+  y_limits <- suppressWarnings(as.numeric(y_limits))
+  if (length(y_limits) != 2L) stop("`y_limits` must contain two values.", call. = FALSE)
+  y_limits[!is.finite(y_limits)] <- data_limits[!is.finite(y_limits)]
+  if (any(!is.finite(y_limits))) stop("`y_limits` must contain finite values.", call. = FALSE)
   if (y_limits[[1L]] == y_limits[[2L]]) {
     padding <- if (y_limits[[1L]] == 0) 0.5 else abs(y_limits[[1L]]) * 0.05
     y_limits <- y_limits + c(-padding, padding)
@@ -472,11 +504,9 @@ ggplot_add.badger_dynamic_legend <- function(object, plot, object_name) {
 
 .badger_check_legend_x_limits <- function(plot, label_x) {
   if (is.null(plot)) return(invisible(NULL))
-  scale <- plot$scales$get_scales("x")
-  if (is.null(scale) || is.function(scale$limits) || length(scale$limits) != 2L) {
-    return(invisible(NULL))
-  }
-  limits <- suppressWarnings(as.numeric(scale$limits))
+  limits <- .badger_plot_limits(plot, "x")
+  if (is.null(limits)) return(invisible(NULL))
+  limits <- suppressWarnings(as.numeric(limits))
   if (all(is.finite(limits)) && label_x > max(limits)) {
     warning(
       paste0(
@@ -487,12 +517,6 @@ ggplot_add.badger_dynamic_legend <- function(object, plot, object_name) {
     )
   }
   invisible(NULL)
-}
-
-.badger_panel_rows <- function(data, by) {
-  if (length(by) == 0L) return(list(seq_len(nrow(data))))
-  keys <- interaction(data[by], drop = TRUE, lex.order = TRUE)
-  split(seq_len(nrow(data)), keys, drop = TRUE)
 }
 
 .badger_custom_labels <- function(default, group, labels) {

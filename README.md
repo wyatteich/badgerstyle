@@ -15,8 +15,10 @@ library(badgerstyle)
 ```
 
 The graphics functions use the Badger Institute's Franklin Gothic fonts.
-Install those fonts and register them with `extrafont` before producing final
-publication files.
+Install those fonts before producing final publication files. `badger_style()`
+and `badger_finisher()` register them through `extrafont` automatically and
+cache the result for the R session. Use `register_fonts = FALSE` to skip that
+step or call `badger_register_fonts(force = TRUE)` to reload the font database.
 
 ## Standard colors
 
@@ -66,9 +68,11 @@ ggplot(df, aes(year, value, colour = series)) +
 ```
 
 Horizontal offsets are fractions of the observed x-range by default, so the
-same settings work with numeric years and dates. Use `offset_unit = "data"`
-for offsets in raw x-axis units, and `arrows = FALSE` when connectors are not
-needed.
+same settings work with numeric years, dates, and transformed axes such as
+log scales. Facet variables are inferred for simple `facet_wrap()` and
+`facet_grid()` plots so labels are calculated independently by panel. Use
+`offset_unit = "data"` for offsets in raw x-axis units, and `arrows = FALSE`
+when connectors are not needed.
 
 ## Badger lines
 

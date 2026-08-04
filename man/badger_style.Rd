@@ -4,12 +4,20 @@
 \alias{badger_style}
 \title{Apply the Badger Institute ggplot style}
 \usage{
-badger_style(horizontal_gridlines = TRUE, vertical_gridlines = FALSE)
+badger_style(
+  horizontal_gridlines = TRUE,
+  vertical_gridlines = FALSE,
+  register_fonts = TRUE
+)
 }
 \arguments{
 \item{horizontal_gridlines}{Logical; draw horizontal major gridlines.}
 
 \item{vertical_gridlines}{Logical; draw vertical major gridlines.}
+
+\item{register_fonts}{Logical; register the Badger fonts through extrafont.
+Registration is cached, so the database is loaded at most once per
+session unless [badger_register_fonts()] is called with `force = TRUE`.}
 }
 \value{
 A list containing a ggplot theme and a Cartesian coordinate system.

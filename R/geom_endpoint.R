@@ -22,18 +22,11 @@
 
 
 geom_endpoint <- function(data, x, y, color) {
-
-  endpoints <- dplyr::bind_rows(
-    dplyr::filter(data, {{x}} == max({{x}})),
-    dplyr::filter(data, {{x}} == min({{x}}))
-  )
+  endpoints <- find_endpoints(data, {{x}}, {{y}})
 
   ggplot2::geom_point(data = endpoints,
                       ggplot2::aes(x = {{x}}, y = {{y}}),
                       color = color,
                       fill = "white",
                       shape = 21, size = 3.7, stroke = 4.2)
-
-
-
 }

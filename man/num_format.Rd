@@ -4,13 +4,7 @@
 \alias{num_format}
 \title{Format a numeric sequence with abbreviated units}
 \usage{
-num_format(
-  from = 1,
-  to = 1,
-  by = 1,
-  suffix = c("k", "m", "b"),
-  currency = NULL
-)
+num_format(from = 1, to = 1, by = 1, suffix = "k", currency = NULL)
 }
 \arguments{
 \item{from, to}{Numeric endpoints of the sequence to label.}

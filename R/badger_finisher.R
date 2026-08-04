@@ -15,6 +15,10 @@
 #' @param border Logical; draw a gray border around the finished graphic.
 #' @param height,width Custom output dimensions in inches. Used only when
 #'   `aspect = "custom"`.
+#' @param register_fonts Logical; register the Badger fonts before rendering.
+#'   Registration is cached for the remainder of the R session.
+#' @param title_family,text_family Font families used for the headline and
+#'   source line. The defaults use the standard Badger Institute fonts.
 #'
 #' @return Invisibly returns the result of closing the PNG graphics device.
 #'
@@ -42,20 +46,28 @@ badger_finisher <- function(plot,
                             filename = "plot.png",
                             aspect = c("default", "1col", "2col", "web", "ppt", "custom"),
                             border = TRUE,
-                            height = 5, width  = 9.55) {
+                            height = 5, width  = 9.55,
+                            register_fonts = TRUE,
+                            title_family = "Franklin Gothic Demi Cond",
+                            text_family = "Franklin Gothic Medium Cond") {
 
   aspect <- match.arg(aspect)
-
-  # cross-platform font loading
-  if (.Platform$OS.type == "windows") {
-    extrafont::loadfonts(device = "win", quiet = TRUE)
-  } else {
-    extrafont::loadfonts(quiet = TRUE)
+  .badger_scalar_logical(border, "border")
+  .badger_scalar_logical(register_fonts, "register_fonts")
+  if (length(height) != 1L || !is.numeric(height) || !is.finite(height) || height <= 0) {
+    stop("`height` must be a positive finite numeric scalar.", call. = FALSE)
+  }
+  if (length(width) != 1L || !is.numeric(width) || !is.finite(width) || width <= 0) {
+    stop("`width` must be a positive finite numeric scalar.", call. = FALSE)
+  }
+  for (argument in c("title_family", "text_family")) {
+    value <- get(argument)
+    if (length(value) != 1L || !is.character(value) || is.na(value)) {
+      stop("`", argument, "` must be a single character string.", call. = FALSE)
+    }
   }
 
-  titlefont <- "Franklin Gothic Demi Cond"
-  font <- "Franklin Gothic Medium Cond"
-  text_color <- "#222222"
+  if (register_fonts) badger_register_fonts()
 
   # insert logo
   #plot <- cowplot::ggdraw(plot) +
@@ -77,69 +89,50 @@ badger_finisher <- function(plot,
 
 
 
-  grDevices::png(filename = filename,
-      width = w,
-      height = h,
-      unit = "in",
-      res = 864)
-  grid::grid.newpage()
+  .badger_render_png(filename, w, h, 864, draw = function() {
+    grid::grid.newpage()
 
-  gridExtra::grid.arrange(
-    plot +
-      ggplot2::labs(
-        title="",
-        caption=""),
-
-    top = grid::textGrob(
-      label = head,
-      hjust=0,
-      x=0.02,
-      y = 0.005,
-
-      gp=grid::gpar(
-        fontfamily = titlefont,
-        fontsize = 16
+    gridExtra::grid.arrange(
+      plot + ggplot2::labs(title = "", caption = ""),
+      top = grid::textGrob(
+        label = head,
+        hjust = 0,
+        x = 0.02,
+        y = 0.005,
+        gp = grid::gpar(fontfamily = title_family, fontsize = 16)
+      ),
+      bottom = gridExtra::arrangeGrob(
+        grid::textGrob(
+          label = source,
+          hjust = 0,
+          x = 0.025,
+          y = 1.1,
+          gp = grid::gpar(fontfamily = text_family, fontsize = 8)
+        ),
+        grid::rasterGrob(
+          img,
+          x = 0.975,
+          hjust = 1,
+          y = 0.6,
+          vjust = 0,
+          interpolate = TRUE,
+          width = grid::unit(0.2, units = "in"),
+          height = grid::unit(0.2, units = "in")
+        ),
+        widths = grid::unit(c(2, 1), "null"),
+        ncol = 2
       )
-    ),
-
-    bottom =  gridExtra::arrangeGrob(
-      grid::textGrob(
-        label = source,
-        hjust=0,
-        x=0.025,
-        y = 1.1,
-
-        gp=grid::gpar(
-          fontfamily=font,
-          fontsize = 8
-        )
-      ),
-
-      grid::rasterGrob(
-        img,
-        x = 0.975, hjust = 1,
-        y = 0.6, vjust = 0,
-        interpolate = TRUE,
-        width = grid::unit(0.2, units = "in"),
-        height = grid::unit(0.2, units = "in")
-      ),
-
-      widths = grid::unit(c(2,1), "null"),
-      ncol = 2
     )
-  )
 
-  if (border) {
-    grid::grid.rect(.5, .5,
-                    width=grid::unit(1,"npc"),
-                    height=grid::unit(1,"npc"),
+    if (border) {
+      grid::grid.rect(
+        0.5,
+        0.5,
+        width = grid::unit(1, "npc"),
+        height = grid::unit(1, "npc"),
+        gp = grid::gpar(lwd = 3, fill = NA, col = "#747F81")
+      )
+    }
+  })
 
-                    gp=grid::gpar(lwd=3, fill=NA, col="#747F81"))
-  }
-
-
-
-  invisible(grDevices::dev.off())
-
-  #return(final)
 }

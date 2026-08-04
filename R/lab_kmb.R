@@ -1,7 +1,8 @@
 #' Format numbers with K/M/B suffixes
 #'
 #' A label function for use with ggplot2 scales (or standalone) that
-#' abbreviates numbers into human-readable K, M, B notation.
+#' abbreviates numbers into human-readable K, M, B notation. Missing and
+#' infinite values are retained as missing, `"Inf"`, or `"-Inf"`.
 #'
 #' @param x A numeric vector.
 #' @return A character vector of formatted labels.
@@ -12,27 +13,35 @@
 #'
 #' @export
 lab_kmb <- function(x) {
-  out <- character(length(x))
+  if (!is.numeric(x)) stop("`x` must be numeric.", call. = FALSE)
+  out <- rep(NA_character_, length(x))
 
-  is_zero <- x == 0
+  is_finite <- is.finite(x)
+  is_zero <- is_finite & x == 0
   ax <- abs(x)
 
-  out[ax < 1e3] <- scales::label_number(
+  small <- is_finite & ax < 1e3
+  thousands <- is_finite & ax >= 1e3 & ax < 1e6
+  millions <- is_finite & ax >= 1e6 & ax < 1e9
+  billions <- is_finite & ax >= 1e9
+
+  out[small] <- scales::label_number(
     big.mark = ","
-  )(x[ax < 1e3])
+  )(x[small])
 
-  out[ax >= 1e3 & ax < 1e6] <- scales::label_number(
-    scale = 1 / 1e3, big.mark = ",", suffix = "k"
-  )(x[ax >= 1e3 & ax < 1e6])
+  out[thousands] <- scales::label_number(
+    scale = 1 / 1e3, accuracy = 0.1, big.mark = ",", suffix = "k"
+  )(x[thousands])
 
-  out[ax >= 1e6 & ax < 1e9] <- scales::label_number(
-    scale = 1 / 1e6, big.mark = ",", suffix = "M"
-  )(x[ax >= 1e6 & ax < 1e9])
+  out[millions] <- scales::label_number(
+    scale = 1 / 1e6, accuracy = 0.1, big.mark = ",", suffix = "M"
+  )(x[millions])
 
-  out[ax >= 1e9] <- scales::label_number(
-    scale = 1 / 1e9, big.mark = ",", suffix = "B"
-  )(x[ax >= 1e9])
+  out[billions] <- scales::label_number(
+    scale = 1 / 1e9, accuracy = 0.1, big.mark = ",", suffix = "B"
+  )(x[billions])
 
   out[is_zero] <- "0"
+  out[is.infinite(x)] <- as.character(x[is.infinite(x)])
   out
 }

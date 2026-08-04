@@ -34,5 +34,5 @@ find_endpoints <- function(data, x, y) {
     dplyr::filter(data, {{x}} == min({{x}}, na.rm = TRUE))
   )
 
-  return(endpoints)
+  dplyr::distinct(endpoints)
 }

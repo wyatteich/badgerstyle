@@ -5,6 +5,9 @@
 #'
 #' @param horizontal_gridlines Logical; draw horizontal major gridlines.
 #' @param vertical_gridlines Logical; draw vertical major gridlines.
+#' @param register_fonts Logical; register the Badger fonts through extrafont.
+#'   Registration is cached, so the database is loaded at most once per
+#'   session unless [badger_register_fonts()] is called with `force = TRUE`.
 #'
 #' @return A list containing a ggplot theme and a Cartesian coordinate system.
 #'   Add the result to a ggplot with `+`.
@@ -19,8 +22,14 @@
 #'
 #' @export
 
-badger_style <- function(horizontal_gridlines = TRUE, vertical_gridlines = FALSE) {
-  extrafont::loadfonts(device = "win", quiet = TRUE)
+badger_style <- function(
+    horizontal_gridlines = TRUE,
+    vertical_gridlines = FALSE,
+    register_fonts = TRUE) {
+  .badger_scalar_logical(horizontal_gridlines, "horizontal_gridlines")
+  .badger_scalar_logical(vertical_gridlines, "vertical_gridlines")
+  .badger_scalar_logical(register_fonts, "register_fonts")
+  if (register_fonts) badger_register_fonts()
 
   titlefont <- "Franklin Gothic Demi Cond"
   font <- "Franklin Gothic Medium Cond"

@@ -13,7 +13,10 @@ badger_finisher(
   aspect = c("default", "1col", "2col", "web", "ppt", "custom"),
   border = TRUE,
   height = 5,
-  width = 9.55
+  width = 9.55,
+  register_fonts = TRUE,
+  title_family = "Franklin Gothic Demi Cond",
+  text_family = "Franklin Gothic Medium Cond"
 )
 }
 \arguments{
@@ -35,6 +38,12 @@ or `"custom"`. The preset determines the output dimensions in inches.}
 
 \item{height, width}{Custom output dimensions in inches. Used only when
 `aspect = "custom"`.}
+
+\item{register_fonts}{Logical; register the Badger fonts before rendering.
+Registration is cached for the remainder of the R session.}
+
+\item{title_family, text_family}{Font families used for the headline and
+source line. The defaults use the standard Badger Institute fonts.}
 }
 \value{
 Invisibly returns the result of closing the PNG graphics device.

@@ -51,12 +51,8 @@ badger_publish <- function(filename = "plot.png", plot, aspect = c("1col", "2col
   # )
 
 
-  grDevices::png(filename = filename,
-                 width = w,
-                 height = h,
-                 unit = "in",
-                 res = 864)
-  grid::grid.newpage()
-  grid::grid.draw(plot)
-  invisible(grDevices::dev.off())
+  .badger_render_png(filename, w, h, 864, draw = function() {
+    grid::grid.newpage()
+    grid::grid.draw(plot)
+  })
 }

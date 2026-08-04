@@ -1,8 +1,8 @@
 #' Add styled lines with white backdrop to a ggplot
 #'
-#' Iterates over unique values of a grouping variable and adds a layered
-#' line + endpoint combination for each group: a white backdrop line/points
-#' for legibility, followed by the colored line/points on top.
+#' Adds four vectorized layers: white backdrop lines and endpoints followed by
+#' colored lines and endpoints. All series are drawn through the same four
+#' layers, keeping complex charts efficient.
 #'
 #' Endpoints are computed per group on rows where \code{y_var} is non-missing,
 #' so series that start late, end early, or have internal NAs still receive
@@ -23,6 +23,9 @@
 #' @param y_var Unquoted or quoted variable name for the y-axis. Defaults to
 #'   the \code{y} mapping of \code{plot}. Used to drop NA rows before locating
 #'   each group's first and last observed data point.
+#' @param by Optional character vector of facet columns. When omitted in the
+#'   deferred form, simple `facet_wrap()` and `facet_grid()` variables are
+#'   inferred from the plot so endpoints are computed within each panel.
 #'
 #' @return When plot information must be inherited, a deferred component that
 #'   ggplot resolves when it is added with \code{+}. Otherwise, a list of
@@ -54,7 +57,8 @@ badger_line <- function(
     lw = 2.5,
     group_var,
     x_var,
-    y_var) {
+    y_var,
+    by = NULL) {
 
   deferred_call <- match.call(expand.dots = FALSE)
   needs_plot <- is.null(plot) && (
@@ -98,7 +102,12 @@ badger_line <- function(
     y_var <- rlang::as_name(substitute(y_var))
   }
 
-  required <- unique(c(group_var, x_var, y_var))
+  if (is.null(by)) by <- .badger_infer_facet_vars(plot, names(df))
+  if (!is.character(by) || anyNA(by)) {
+    stop("`by` must be NULL or a character vector of column names.", call. = FALSE)
+  }
+
+  required <- unique(c(group_var, x_var, y_var, by))
   absent <- setdiff(required, names(df))
   if (length(absent) > 0L) {
     stop(
@@ -112,54 +121,52 @@ badger_line <- function(
     stop("`lw` must be a positive finite numeric scalar.", call. = FALSE)
   }
 
-  # backdrop width factor
   bwf <- 1.45
-  geom_list <- list()
-  group_values <- as.character(df[[group_var]])
-
-  for (item in unique(group_values[!is.na(group_values)])) {
-
-    grp_df <- df[!is.na(group_values) & group_values == item, , drop = FALSE]
-    grp_ends <- find_endpoints(
-      grp_df,
+  valid_group <- !is.na(df[[group_var]])
+  line_data <- df[valid_group, , drop = FALSE]
+  endpoint_groups <- .badger_split_rows(line_data, c(by, group_var))
+  endpoint_data <- dplyr::bind_rows(lapply(endpoint_groups, function(rows) {
+    find_endpoints(
+      line_data[rows, , drop = FALSE],
       !!rlang::sym(x_var),
       !!rlang::sym(y_var)
     )
+  }))
 
-    geom_list <- c(geom_list, list(
-      ggplot2::geom_line(
-        data = grp_df,
-        linewidth = lw * bwf,
-        lineend = "round",
-        color = "white",
-        show.legend = FALSE
-      ),
-      ggplot2::geom_point(
-        data = grp_ends,
-        shape = 21,
-        size = lw * bwf,
-        stroke = lw + 0.5,
-        fill = "white",
-        color = "white",
-        show.legend = FALSE
-      ),
-      ggplot2::geom_line(
-        data = grp_df,
-        linewidth = lw,
-        lineend = "round"
-      ),
-      ggplot2::geom_point(
-        data = grp_ends,
-        shape = 21,
-        size = lw,
-        stroke = lw + 0.5,
-        fill = "white",
-        show.legend = FALSE
-      )
-    ))
-  }
-
-  geom_list
+  group_mapping <- ggplot2::aes(group = .data[[group_var]])
+  list(
+    ggplot2::geom_line(
+      data = line_data,
+      mapping = group_mapping,
+      linewidth = lw * bwf,
+      lineend = "round",
+      color = "white",
+      show.legend = FALSE
+    ),
+    ggplot2::geom_point(
+      data = endpoint_data,
+      shape = 21,
+      size = lw * bwf,
+      stroke = lw + 0.5,
+      fill = "white",
+      color = "white",
+      show.legend = FALSE
+    ),
+    ggplot2::geom_line(
+      data = line_data,
+      mapping = group_mapping,
+      linewidth = lw,
+      lineend = "round"
+    ),
+    ggplot2::geom_point(
+      data = endpoint_data,
+      shape = 21,
+      size = lw,
+      stroke = lw + 0.5,
+      fill = "white",
+      show.legend = FALSE
+    )
+  )
 }
 
 #' Add a deferred Badger line to a ggplot

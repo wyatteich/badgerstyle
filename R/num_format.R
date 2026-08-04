@@ -19,20 +19,20 @@
 #' @export
 
 
-num_format <- function(from = 1, to = 1, by = 1, suffix = c("k", "m", "b"), currency = NULL) {
-
-  if(suffix == "k") {
-    labs <- paste(as.character(seq(from, to, by)/1000), "k", sep = "")
-  } else if (suffix == "m") {
-    labs <- paste(as.character(seq(from, to, by)/1000000), "m", sep = "")
-  } else if (suffix == "b") {
-    labs <- paste(as.character(seq(from, to, by)/1000000000), "b", sep = "")
+num_format <- function(from = 1, to = 1, by = 1, suffix = "k", currency = NULL) {
+  suffix <- match.arg(suffix, c("k", "m", "b"))
+  numeric_arguments <- c(from = from, to = to, by = by)
+  if (any(lengths(list(from, to, by)) != 1L) || any(!is.finite(numeric_arguments))) {
+    stop("`from`, `to`, and `by` must be finite numeric scalars.", call. = FALSE)
+  }
+  if (by == 0) stop("`by` must not be zero.", call. = FALSE)
+  if (!is.null(currency) && (length(currency) != 1L || !is.character(currency))) {
+    stop("`currency` must be NULL or a single character string.", call. = FALSE)
   }
 
-
-  labs <- paste(currency, labs, sep = "")
-
-  return(labs)
+  divisors <- c(k = 1e3, m = 1e6, b = 1e9)
+  prefix <- if (is.null(currency)) "" else currency
+  paste0(prefix, as.character(seq(from, to, by) / divisors[[suffix]]), suffix)
 }
 
 

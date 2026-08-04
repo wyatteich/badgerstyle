@@ -37,7 +37,7 @@ badger_dynamic_legend(
   arrow_linewidth = 0.55,
   arrow_length = 0.11,
   arrow_type = "closed",
-  mask_fill = "white"
+  mask_fill = NULL
 )
 }
 \arguments{
@@ -61,8 +61,8 @@ of `group`. Unmatched groups retain their original labels.}
 
 \item{by}{Optional character vector of facet columns. Endpoint selection and
 label spacing are performed independently within each combination of
-these columns, and the columns are retained so ggplot places each legend
-in the correct facet.}
+these columns. When omitted, simple `facet_wrap()` and `facet_grid()`
+variables are inferred from `plot`.}
 
 \item{min_gap}{Minimum vertical distance between labels, in y-axis units.
 The default is `min_gap_fraction` of the label range.}
@@ -99,7 +99,8 @@ passed to [ggplot2::geom_text()].}
 \item{arrow_linewidth, arrow_length, arrow_type}{Arrow styling. `arrow_length`
 is measured in centimeters.}
 
-\item{mask_fill}{Fill color used to cover gridlines in the label area.}
+\item{mask_fill}{Fill color used to cover gridlines in the label area.
+Defaults to the plot's panel-background fill, falling back to white.}
 }
 \value{
 When plot information must be inherited, a deferred component that

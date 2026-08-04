@@ -4,7 +4,7 @@
 \alias{badger_line}
 \title{Add styled lines with white backdrop to a ggplot}
 \usage{
-badger_line(plot = NULL, df, lw = 2.5, group_var, x_var, y_var)
+badger_line(plot = NULL, df, lw = 2.5, group_var, x_var, y_var, by = NULL)
 }
 \arguments{
 \item{plot}{An optional ggplot object. Used to inherit \code{df},
@@ -27,6 +27,10 @@ the \code{x} mapping of \code{plot}.}
 \item{y_var}{Unquoted or quoted variable name for the y-axis. Defaults to
 the \code{y} mapping of \code{plot}. Used to drop NA rows before locating
 each group's first and last observed data point.}
+
+\item{by}{Optional character vector of facet columns. When omitted in the
+deferred form, simple `facet_wrap()` and `facet_grid()` variables are
+inferred from the plot so endpoints are computed within each panel.}
 }
 \value{
 When plot information must be inherited, a deferred component that
@@ -34,9 +38,9 @@ When plot information must be inherited, a deferred component that
   ggplot layer objects addable to a ggplot via \code{+}.
 }
 \description{
-Iterates over unique values of a grouping variable and adds a layered
-line + endpoint combination for each group: a white backdrop line/points
-for legibility, followed by the colored line/points on top.
+Adds four vectorized layers: white backdrop lines and endpoints followed by
+colored lines and endpoints. All series are drawn through the same four
+layers, keeping complex charts efficient.
 }
 \details{
 Endpoints are computed per group on rows where \code{y_var} is non-missing,

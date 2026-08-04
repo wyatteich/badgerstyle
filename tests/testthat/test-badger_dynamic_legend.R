@@ -129,6 +129,69 @@ test_that("Date axes and facets retain their types and panel columns", {
   expect_silent(ggplot2::ggplot_build(plot + result))
 })
 
+test_that("facet variables are inferred from the plot", {
+  data <- expand.grid(
+    x = 1:3,
+    series = c("a", "b"),
+    panel = c("one", "two")
+  )
+  data$y <- seq_len(nrow(data))
+  plot <- ggplot2::ggplot(
+    data,
+    ggplot2::aes(x, y, colour = series)
+  ) +
+    ggplot2::facet_wrap(~panel)
+
+  layers <- badger_dynamic_legend(plot, arrows = FALSE)
+  labels <- attr(layers, "label_data")
+
+  expect_equal(nrow(labels), 4L)
+  expect_setequal(unique(labels$panel), c("one", "two"))
+})
+
+test_that("coordinate limits and panel fill inform label layout", {
+  data <- data.frame(
+    x = rep(1:3, 2),
+    y = c(10, 11, 12, 12, 13, 14),
+    series = rep(c("a", "b"), each = 3)
+  )
+  plot <- ggplot2::ggplot(
+    data,
+    ggplot2::aes(x, y, colour = series)
+  ) +
+    ggplot2::coord_cartesian(ylim = c(0, 100)) +
+    ggplot2::theme(panel.background = ggplot2::element_rect(fill = "ivory"))
+
+  layers <- badger_dynamic_legend(plot, arrows = FALSE)
+  labels <- attr(layers, "label_data")
+
+  expect_true(all(labels$.badger_label_y >= 3.5))
+  expect_equal(layers$mask$aes_params$fill, "ivory")
+})
+
+test_that("relative offsets operate in transformed x space", {
+  data <- data.frame(
+    x = rep(c(1, 10, 100), 2),
+    y = c(1:3, 2:4),
+    series = rep(c("a", "b"), each = 3)
+  )
+  plot <- ggplot2::ggplot(
+    data,
+    ggplot2::aes(x, y, colour = series)
+  ) +
+    ggplot2::scale_x_log10()
+
+  layers <- badger_dynamic_legend(
+    plot,
+    arrows = FALSE,
+    label_offset = 0.1,
+    right_space = 0.2
+  )
+  labels <- attr(layers, "label_data")
+
+  expect_equal(labels$.badger_label_x_numeric, rep(10^2.2, 2), tolerance = 1e-8)
+})
+
 test_that("invalid label settings fail informatively", {
   data <- data.frame(
     x = rep(1:2, 3),

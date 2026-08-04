@@ -18,6 +18,34 @@ The graphics functions use the Badger Institute's Franklin Gothic fonts.
 Install those fonts and register them with `extrafont` before producing final
 publication files.
 
+## Standard colors
+
+The established Badger colors are available directly after loading the
+package:
+
+```r
+badred      # "#ED0000"
+badblue     # "#313469"
+badgreen    # "#008610"
+badgold     # "#F69800"
+badliblue   # "#99CCFF"
+badpurple   # "#7439C3"
+```
+
+Use `badger_palette` for the complete named vector or `badger_colors()` to
+select colors by name. The ggplot scales assign these colors to discrete
+series in the standard order:
+
+```r
+ggplot(df, aes(year, value, colour = series)) +
+  badger_line() +
+  scale_color_badger()
+
+ggplot(df, aes(category, value, fill = category)) +
+  geom_col() +
+  scale_fill_badger(values = c("badblue", "badgold", "badgreen"))
+```
+
 ## Dynamic right-side legends
 
 `badger_dynamic_legend()` labels each line beside its final observed value and

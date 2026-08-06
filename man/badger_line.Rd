@@ -38,9 +38,11 @@ When plot information must be inherited, a deferred component that
   ggplot layer objects addable to a ggplot via \code{+}.
 }
 \description{
-Adds four vectorized layers: white backdrop lines and endpoints followed by
-colored lines and endpoints. All series are drawn through the same four
-layers, keeping complex charts efficient.
+Adds four layers for each series, in visual-object order: its white backdrop
+line, white endpoint masks, colored line, and colored endpoints. Completing
+one series before drawing the next preserves intentional white separation at
+crossings and prevents another series' endpoints from being interleaved
+with the wrong line.
 }
 \details{
 Endpoints are computed per group on rows where \code{y_var} is non-missing,

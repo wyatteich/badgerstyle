@@ -2,7 +2,7 @@
 % Please edit documentation in R/fonts.R
 \name{badger_register_fonts}
 \alias{badger_register_fonts}
-\title{Register Badger Institute fonts with extrafont}
+\title{Register Badger Institute fonts}
 \usage{
 badger_register_fonts(force = FALSE, quiet = TRUE)
 }
@@ -13,11 +13,14 @@ registered in this session.}
 \item{quiet}{Logical; suppress extrafont progress messages.}
 }
 \value{
-Invisibly returns `TRUE` when fonts were loaded and `FALSE` when a
-  cached registration was reused.
+Invisibly returns `TRUE` when font registration changed and `FALSE`
+  when the cached registration and device aliases were already available.
 }
 \description{
 Loads the extrafont database once per R session for the current platform.
+On Windows, it also registers the two Franklin Gothic device aliases used
+by Badger graphics. This direct registration keeps the correct fonts
+available even when the user's extrafont database is empty or out of date.
 Repeated calls are inexpensive because successful registration is cached.
 }
 \examples{

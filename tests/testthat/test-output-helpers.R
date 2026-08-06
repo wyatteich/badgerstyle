@@ -6,6 +6,33 @@ test_that("badger_style can skip font registration", {
   expect_s3_class(style[[2L]], "CoordCartesian")
 })
 
+test_that("badger_style registers Badger fonts with the Windows device", {
+  skip_if(.Platform$OS.type != "windows")
+
+  badger_style()
+  registered <- names(grDevices::windowsFonts())
+
+  expect_true("Franklin Gothic Medium Cond" %in% registered)
+  expect_true("Franklin Gothic Demi Cond" %in% registered)
+
+  path <- tempfile(fileext = ".png")
+  expect_no_warning(
+    badgerstyle:::.badger_render_png(path, 3, 2, 150, function() {
+      grid::grid.newpage()
+      grid::grid.text(
+        "Badger body",
+        gp = grid::gpar(fontfamily = "Franklin Gothic Medium Cond")
+      )
+      grid::grid.text(
+        "Badger headline",
+        y = 0.3,
+        gp = grid::gpar(fontfamily = "Franklin Gothic Demi Cond")
+      )
+    })
+  )
+  expect_gt(file.info(path)$size, 0)
+})
+
 test_that("PNG rendering closes its device after success and failure", {
   success_path <- tempfile(fileext = ".png")
   failure_path <- tempfile(fileext = ".png")

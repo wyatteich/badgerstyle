@@ -20,10 +20,14 @@ test_that("badger_line inherits from the plot on its left", {
     badger_line(lw = width)
 
   expect_silent(ggplot2::ggplot_build(plot))
-  expect_equal(length(plot$layers), 4L)
+  expect_equal(length(plot$layers), 8L)
   expect_equal(plot$layers[[1L]]$geom_params$lineend, "round")
   expect_equal(plot$layers[[1L]]$aes_params$linewidth, width * 1.45)
   expect_equal(plot$layers[[3L]]$aes_params$linewidth, width)
+  expect_equal(unique(plot$layers[[1L]]$data$series), "ends early")
+  expect_equal(unique(plot$layers[[4L]]$data$series), "ends early")
+  expect_equal(unique(plot$layers[[5L]]$data$series), "complete")
+  expect_equal(unique(plot$layers[[8L]]$data$series), "complete")
 })
 
 test_that("badger_line preserves the original plot-first API", {
@@ -36,7 +40,7 @@ test_that("badger_line preserves the original plot-first API", {
   layers <- badger_line(plot, lw = 1.2)
 
   expect_type(layers, "list")
-  expect_equal(length(layers), 4L)
+  expect_equal(length(layers), 8L)
   expect_silent(ggplot2::ggplot_build(plot + layers))
 
   explicit_layers <- badger_line(
@@ -47,7 +51,7 @@ test_that("badger_line preserves the original plot-first API", {
     x_var = year,
     y_var = value
   )
-  expect_equal(length(explicit_layers), 4L)
+  expect_equal(length(explicit_layers), 8L)
 
   partially_inherited <- badger_line(
     plot,
@@ -55,7 +59,7 @@ test_that("badger_line preserves the original plot-first API", {
     group_var = series,
     x_var = year
   )
-  expect_equal(length(partially_inherited), 4L)
+  expect_equal(length(partially_inherited), 8L)
 })
 
 test_that("badger_line supports explicit data without a plot", {
@@ -69,7 +73,7 @@ test_that("badger_line supports explicit data without a plot", {
     y_var = "value"
   )
 
-  expect_equal(length(layers), 4L)
+  expect_equal(length(layers), 8L)
   plot <- ggplot2::ggplot(
     data,
     ggplot2::aes(year, value, colour = series)
@@ -85,7 +89,10 @@ test_that("badger_line endpoints use final observed values", {
   ) +
     badger_line()
 
-  endpoint_data <- plot$layers[[2L]]$data
+  endpoint_data <- dplyr::bind_rows(
+    plot$layers[[2L]]$data,
+    plot$layers[[6L]]$data
+  )
 
   expect_equal(
     sort(endpoint_data$year[endpoint_data$series == "ends early"]),
@@ -113,7 +120,10 @@ test_that("badger_line computes endpoints independently within facets", {
     ggplot2::facet_wrap(~panel) +
     badger_line()
 
-  endpoints <- plot$layers[[2L]]$data
+  endpoints <- dplyr::bind_rows(
+    plot$layers[[2L]]$data,
+    plot$layers[[6L]]$data
+  )
   expect_equal(nrow(endpoints), 8L)
   expect_equal(
     max(endpoints$year[endpoints$panel == "one" & endpoints$series == "a"]),
@@ -121,7 +131,7 @@ test_that("badger_line computes endpoints independently within facets", {
   )
 })
 
-test_that("badger_line remains four layers for many series", {
+test_that("badger_line preserves four-layer visual objects for many series", {
   data <- data.frame(
     x = rep(1:3, 20),
     y = seq_len(60),
@@ -130,7 +140,28 @@ test_that("badger_line remains four layers for many series", {
   plot <- ggplot2::ggplot(data, ggplot2::aes(x, y, colour = series)) +
     badger_line()
 
-  expect_equal(length(plot$layers), 4L)
+  expect_equal(length(plot$layers), 80L)
+})
+
+test_that("badger_line orders each series mask and color layers together", {
+  data <- line_test_data()
+  plot <- ggplot2::ggplot(
+    data,
+    ggplot2::aes(year, value, colour = series)
+  ) + badger_line()
+
+  expected_geoms <- c("GeomLine", "GeomPoint", "GeomLine", "GeomPoint")
+  for (start in c(1L, 5L)) {
+    layer_group <- plot$layers[start + 0:3]
+    expect_equal(
+      vapply(layer_group, function(layer) class(layer$geom)[[1L]], character(1)),
+      expected_geoms
+    )
+    expect_equal(layer_group[[1L]]$aes_params$colour, "white")
+    expect_equal(layer_group[[2L]]$aes_params$colour, "white")
+    expect_null(layer_group[[3L]]$aes_params$colour)
+    expect_null(layer_group[[4L]]$aes_params$colour)
+  }
 })
 
 test_that("badger_line reports missing inherited aesthetics", {

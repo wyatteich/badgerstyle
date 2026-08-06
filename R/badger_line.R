@@ -1,8 +1,10 @@
 #' Add styled lines with white backdrop to a ggplot
 #'
-#' Adds four vectorized layers: white backdrop lines and endpoints followed by
-#' colored lines and endpoints. All series are drawn through the same four
-#' layers, keeping complex charts efficient.
+#' Adds four layers for each series, in visual-object order: its white backdrop
+#' line, white endpoint masks, colored line, and colored endpoints. Completing
+#' one series before drawing the next preserves intentional white separation at
+#' crossings and prevents another series' endpoints from being interleaved
+#' with the wrong line.
 #'
 #' Endpoints are computed per group on rows where \code{y_var} is non-missing,
 #' so series that start late, end early, or have internal NAs still receive
@@ -121,52 +123,59 @@ badger_line <- function(
     stop("`lw` must be a positive finite numeric scalar.", call. = FALSE)
   }
 
+  # Each series must remain a coherent four-layer visual object. Drawing all
+  # masks first and all colored elements afterward changes overlap semantics.
   bwf <- 1.45
   valid_group <- !is.na(df[[group_var]])
   line_data <- df[valid_group, , drop = FALSE]
-  endpoint_groups <- .badger_split_rows(line_data, c(by, group_var))
-  endpoint_data <- dplyr::bind_rows(lapply(endpoint_groups, function(rows) {
-    find_endpoints(
-      line_data[rows, , drop = FALSE],
-      !!rlang::sym(x_var),
-      !!rlang::sym(y_var)
-    )
-  }))
+  group_values <- as.character(line_data[[group_var]])
+  layers <- list()
 
-  group_mapping <- ggplot2::aes(group = .data[[group_var]])
-  list(
-    ggplot2::geom_line(
-      data = line_data,
-      mapping = group_mapping,
-      linewidth = lw * bwf,
-      lineend = "round",
-      color = "white",
-      show.legend = FALSE
-    ),
-    ggplot2::geom_point(
-      data = endpoint_data,
-      shape = 21,
-      size = lw * bwf,
-      stroke = lw + 0.5,
-      fill = "white",
-      color = "white",
-      show.legend = FALSE
-    ),
-    ggplot2::geom_line(
-      data = line_data,
-      mapping = group_mapping,
-      linewidth = lw,
-      lineend = "round"
-    ),
-    ggplot2::geom_point(
-      data = endpoint_data,
-      shape = 21,
-      size = lw,
-      stroke = lw + 0.5,
-      fill = "white",
-      show.legend = FALSE
-    )
-  )
+  for (group_value in unique(group_values)) {
+    group_data <- line_data[group_values == group_value, , drop = FALSE]
+    endpoint_groups <- .badger_split_rows(group_data, by)
+    endpoint_data <- dplyr::bind_rows(lapply(endpoint_groups, function(rows) {
+      find_endpoints(
+        group_data[rows, , drop = FALSE],
+        !!rlang::sym(x_var),
+        !!rlang::sym(y_var)
+      )
+    }))
+
+    layers <- c(layers, list(
+      ggplot2::geom_line(
+        data = group_data,
+        linewidth = lw * bwf,
+        lineend = "round",
+        color = "white",
+        show.legend = FALSE
+      ),
+      ggplot2::geom_point(
+        data = endpoint_data,
+        shape = 21,
+        size = lw * bwf,
+        stroke = lw + 0.5,
+        fill = "white",
+        color = "white",
+        show.legend = FALSE
+      ),
+      ggplot2::geom_line(
+        data = group_data,
+        linewidth = lw,
+        lineend = "round"
+      ),
+      ggplot2::geom_point(
+        data = endpoint_data,
+        shape = 21,
+        size = lw,
+        stroke = lw + 0.5,
+        fill = "white",
+        show.legend = FALSE
+      )
+    ))
+  }
+
+  layers
 }
 
 #' Add a deferred Badger line to a ggplot

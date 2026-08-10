@@ -88,6 +88,14 @@ ggplot(df, aes(year, value, colour = series)) +
 It draws the colored lines and endpoints itself, including the white backdrop,
 so a separate `geom_line()` is not needed.
 
+When no color or group aesthetic is mapped, the full data frame is treated as
+one series. Use `colour` (or its `color` alias) to set a fixed line color:
+
+```r
+ggplot(df, aes(year, value)) +
+  badger_line(colour = badred)
+```
+
 ## Publication output
 
 Use `badger_finisher()` to write a high-resolution PNG with a headline, source

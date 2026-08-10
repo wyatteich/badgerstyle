@@ -4,7 +4,17 @@
 \alias{badger_line}
 \title{Add styled lines with white backdrop to a ggplot}
 \usage{
-badger_line(plot = NULL, df, lw = 2.5, group_var, x_var, y_var, by = NULL)
+badger_line(
+  plot = NULL,
+  df,
+  lw = 2.5,
+  group_var,
+  x_var,
+  y_var,
+  by = NULL,
+  colour = NULL,
+  color = NULL
+)
 }
 \arguments{
 \item{plot}{An optional ggplot object. Used to inherit \code{df},
@@ -18,8 +28,9 @@ result is added with \code{+}, it inherits from the plot on its left.}
 Defaults to \code{2.5}.}
 
 \item{group_var}{Unquoted or quoted variable name for the grouping aesthetic
-(typically mapped to \code{color}). Defaults to the \code{colour} mapping
-of \code{plot}.}
+(typically mapped to \code{color}). Defaults to the \code{colour},
+\code{color}, or \code{group} mapping of \code{plot}. When none is supplied
+or mapped, the entire data frame is treated as one series.}
 
 \item{x_var}{Unquoted or quoted variable name for the x-axis. Defaults to
 the \code{x} mapping of \code{plot}.}
@@ -31,6 +42,10 @@ each group's first and last observed data point.}
 \item{by}{Optional character vector of facet columns. When omitted in the
 deferred form, simple `facet_wrap()` and `facet_grid()` variables are
 inferred from the plot so endpoints are computed within each panel.}
+
+\item{colour, color}{Optional fixed color for the visible line and endpoint
+outlines. \code{color} is an alias for \code{colour}. When omitted, the
+layers inherit a mapped color or use ggplot2's default geom color.}
 }
 \value{
 When plot information must be inherited, a deferred component that

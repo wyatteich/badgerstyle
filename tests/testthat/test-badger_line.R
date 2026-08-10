@@ -164,12 +164,62 @@ test_that("badger_line orders each series mask and color layers together", {
   }
 })
 
-test_that("badger_line reports missing inherited aesthetics", {
+test_that("badger_line treats data without a group mapping as one series", {
   data <- line_test_data()
-  plot <- ggplot2::ggplot(data, ggplot2::aes(year, value))
+  plot <- ggplot2::ggplot(data, ggplot2::aes(year, value)) +
+    badger_line()
+
+  expect_equal(length(plot$layers), 4L)
+  expect_silent(ggplot2::ggplot_build(plot))
+  expect_equal(nrow(plot$layers[[1L]]$data), nrow(data))
+  expect_equal(
+    sort(plot$layers[[2L]]$data$year),
+    c(2020, 2020, 2022)
+  )
+})
+
+test_that("badger_line supports fixed colour and color arguments", {
+  data <- line_test_data()
+  grouped_plot <- ggplot2::ggplot(
+    data,
+    ggplot2::aes(year, value, group = series)
+  ) +
+    badger_line(colour = badred)
+
+  expect_equal(length(grouped_plot$layers), 8L)
+  expect_equal(grouped_plot$layers[[3L]]$aes_params$colour, badred)
+  expect_equal(grouped_plot$layers[[4L]]$aes_params$colour, badred)
+  expect_equal(grouped_plot$layers[[7L]]$aes_params$colour, badred)
+  expect_equal(grouped_plot$layers[[8L]]$aes_params$colour, badred)
+
+  layers <- badger_line(
+    df = data,
+    x_var = year,
+    y_var = value,
+    color = badblue
+  )
+  expect_equal(length(layers), 4L)
+  expect_equal(layers[[3L]]$aes_params$colour, badblue)
+  expect_equal(layers[[4L]]$aes_params$colour, badblue)
+
+  expect_error(
+    badger_line(
+      df = data,
+      x_var = year,
+      y_var = value,
+      colour = badred,
+      color = badblue
+    ),
+    "only one"
+  )
+})
+
+test_that("badger_line still reports missing x and y aesthetics", {
+  data <- line_test_data()
+  plot <- ggplot2::ggplot(data, ggplot2::aes(year))
 
   expect_error(
     plot + badger_line(),
-    "group_var"
+    "y_var"
   )
 })

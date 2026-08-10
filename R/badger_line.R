@@ -18,8 +18,9 @@
 #' @param lw Numeric. Base line width. Backdrop is drawn at \code{lw * 1.45}.
 #'   Defaults to \code{2.5}.
 #' @param group_var Unquoted or quoted variable name for the grouping aesthetic
-#'   (typically mapped to \code{color}). Defaults to the \code{colour} mapping
-#'   of \code{plot}.
+#'   (typically mapped to \code{color}). Defaults to the \code{colour},
+#'   \code{color}, or \code{group} mapping of \code{plot}. When none is supplied
+#'   or mapped, the entire data frame is treated as one series.
 #' @param x_var Unquoted or quoted variable name for the x-axis. Defaults to
 #'   the \code{x} mapping of \code{plot}.
 #' @param y_var Unquoted or quoted variable name for the y-axis. Defaults to
@@ -28,6 +29,9 @@
 #' @param by Optional character vector of facet columns. When omitted in the
 #'   deferred form, simple `facet_wrap()` and `facet_grid()` variables are
 #'   inferred from the plot so endpoints are computed within each panel.
+#' @param colour,color Optional fixed color for the visible line and endpoint
+#'   outlines. \code{color} is an alias for \code{colour}. When omitted, the
+#'   layers inherit a mapped color or use ggplot2's default geom color.
 #'
 #' @return When plot information must be inherited, a deferred component that
 #'   ggplot resolves when it is added with \code{+}. Otherwise, a list of
@@ -60,11 +64,13 @@ badger_line <- function(
     group_var,
     x_var,
     y_var,
-    by = NULL) {
+    by = NULL,
+    colour = NULL,
+    color = NULL) {
 
   deferred_call <- match.call(expand.dots = FALSE)
   needs_plot <- is.null(plot) && (
-    missing(df) || missing(group_var) || missing(x_var) || missing(y_var)
+    missing(df) || missing(x_var) || missing(y_var)
   )
   if (needs_plot) {
     return(structure(
@@ -86,7 +92,8 @@ badger_line <- function(
     group_var <- .badger_line_mapping(
       plot,
       c("colour", "color", "group"),
-      "group_var"
+      "group_var",
+      required = FALSE
     )
   } else {
     group_var <- rlang::as_name(substitute(group_var))
@@ -122,13 +129,30 @@ badger_line <- function(
   if (length(lw) != 1L || !is.numeric(lw) || !is.finite(lw) || lw <= 0) {
     stop("`lw` must be a positive finite numeric scalar.", call. = FALSE)
   }
+  if (!is.null(colour) && !is.null(color)) {
+    stop("Supply only one of `colour` and `color`.", call. = FALSE)
+  }
+  fixed_colour <- if (!is.null(colour)) colour else color
+  if (!is.null(fixed_colour) && (
+    !is.character(fixed_colour) || length(fixed_colour) != 1L ||
+      is.na(fixed_colour) || !nzchar(fixed_colour)
+  )) {
+    stop("`colour` must be NULL or one non-empty color string.", call. = FALSE)
+  }
 
   # Each series must remain a coherent four-layer visual object. Drawing all
   # masks first and all colored elements afterward changes overlap semantics.
   bwf <- 1.45
-  valid_group <- !is.na(df[[group_var]])
+  implicit_group <- is.null(group_var)
+  valid_group <- if (implicit_group) rep(TRUE, nrow(df)) else !is.na(df[[group_var]])
   line_data <- df[valid_group, , drop = FALSE]
-  group_values <- as.character(line_data[[group_var]])
+  group_values <- if (implicit_group) {
+    rep.int(".badger_single_group", nrow(line_data))
+  } else {
+    as.character(line_data[[group_var]])
+  }
+  layer_mapping <- if (implicit_group) ggplot2::aes(group = 1) else NULL
+  fixed_colour_args <- if (is.null(fixed_colour)) list() else list(colour = fixed_colour)
   layers <- list()
 
   for (group_value in unique(group_values)) {
@@ -142,8 +166,25 @@ badger_line <- function(
       )
     }))
 
+    colored_line <- do.call(ggplot2::geom_line, c(list(
+      mapping = layer_mapping,
+      data = group_data,
+      linewidth = lw,
+      lineend = "round"
+    ), fixed_colour_args))
+    colored_endpoints <- do.call(ggplot2::geom_point, c(list(
+      mapping = layer_mapping,
+      data = endpoint_data,
+      shape = 21,
+      size = lw,
+      stroke = lw + 0.5,
+      fill = "white",
+      show.legend = FALSE
+    ), fixed_colour_args))
+
     layers <- c(layers, list(
       ggplot2::geom_line(
+        mapping = layer_mapping,
         data = group_data,
         linewidth = lw * bwf,
         lineend = "round",
@@ -151,6 +192,7 @@ badger_line <- function(
         show.legend = FALSE
       ),
       ggplot2::geom_point(
+        mapping = layer_mapping,
         data = endpoint_data,
         shape = 21,
         size = lw * bwf,
@@ -159,19 +201,8 @@ badger_line <- function(
         color = "white",
         show.legend = FALSE
       ),
-      ggplot2::geom_line(
-        data = group_data,
-        linewidth = lw,
-        lineend = "round"
-      ),
-      ggplot2::geom_point(
-        data = endpoint_data,
-        shape = 21,
-        size = lw,
-        stroke = lw + 0.5,
-        fill = "white",
-        show.legend = FALSE
-      )
+      colored_line,
+      colored_endpoints
     ))
   }
 
@@ -201,13 +232,14 @@ ggplot_add.badger_line <- function(object, plot, object_name) {
   plot + layers
 }
 
-.badger_line_mapping <- function(plot, aesthetics, argument) {
+.badger_line_mapping <- function(plot, aesthetics, argument, required = TRUE) {
   if (!is.null(plot)) {
     for (aesthetic in aesthetics) {
       mapping <- plot$mapping[[aesthetic]]
       if (!is.null(mapping)) return(rlang::as_label(mapping))
     }
   }
+  if (!required) return(NULL)
   stop(
     "Supply `",
     argument,

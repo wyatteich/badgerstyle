@@ -56,7 +56,9 @@ grid's standard text spacing.}
 
 \item{title_plot_padding, title_border_padding}{Non-negative spacing in
 points below and above the headline, respectively. These independently
-control the headline-to-plot gap and the top-border-to-headline inset.}
+control the headline-to-plot gap and the top-border-to-headline inset.
+For backward compatibility, calls that omit all four line-height and
+padding arguments use the original Badger finisher layout exactly.}
 }
 \value{
 Invisibly returns the result of closing the PNG graphics device.

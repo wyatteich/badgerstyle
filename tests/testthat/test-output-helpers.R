@@ -85,6 +85,80 @@ test_that("badger_finisher writes a composed PNG", {
   expect_gt(file.info(path)$size, 0)
 })
 
+test_that("badger_finisher defaults reproduce the original layout exactly", {
+  current_path <- tempfile(fileext = ".png")
+  legacy_path <- tempfile(fileext = ".png")
+  plot <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+    ggplot2::geom_point() +
+    ggplot2::labs(title = "Title replaced by finisher")
+  logo_ref <- system.file(
+    "img",
+    "Badger-Institute-Icon.png",
+    package = "badgerstyle"
+  )
+  headline <- "First headline line\nSecond headline line"
+  source <- "Source: regression test"
+
+  badger_finisher(
+    plot,
+    head = headline,
+    source = source,
+    logo_ref = logo_ref,
+    filename = current_path,
+    aspect = "custom",
+    height = 1.5,
+    width = 2,
+    register_fonts = FALSE,
+    title_family = "sans",
+    text_family = "sans"
+  )
+
+  logo <- png::readPNG(logo_ref)
+  badgerstyle:::.badger_render_png(legacy_path, 2, 1.5, 864, function() {
+    grid::grid.newpage()
+    gridExtra::grid.arrange(
+      plot + ggplot2::labs(title = "", caption = ""),
+      top = grid::textGrob(
+        label = headline,
+        hjust = 0,
+        x = 0.02,
+        y = 0.005,
+        gp = grid::gpar(fontfamily = "sans", fontsize = 16)
+      ),
+      bottom = gridExtra::arrangeGrob(
+        grid::textGrob(
+          label = source,
+          hjust = 0,
+          x = 0.025,
+          y = 1.1,
+          gp = grid::gpar(fontfamily = "sans", fontsize = 8)
+        ),
+        grid::rasterGrob(
+          logo,
+          x = 0.975,
+          hjust = 1,
+          y = 0.6,
+          vjust = 0,
+          interpolate = TRUE,
+          width = grid::unit(0.2, units = "in"),
+          height = grid::unit(0.2, units = "in")
+        ),
+        widths = grid::unit(c(2, 1), "null"),
+        ncol = 2
+      )
+    )
+    grid::grid.rect(
+      0.5,
+      0.5,
+      width = grid::unit(1, "npc"),
+      height = grid::unit(1, "npc"),
+      gp = grid::gpar(lwd = 3, fill = NA, col = "#747F81")
+    )
+  })
+
+  expect_equal(png::readPNG(current_path), png::readPNG(legacy_path))
+})
+
 test_that("badger_finisher supports multiline title and source spacing", {
   path <- tempfile(fileext = ".png")
   plot <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +

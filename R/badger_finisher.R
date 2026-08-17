@@ -26,6 +26,8 @@
 #' @param title_plot_padding,title_border_padding Non-negative spacing in
 #'   points below and above the headline, respectively. These independently
 #'   control the headline-to-plot gap and the top-border-to-headline inset.
+#'   For backward compatibility, calls that omit all four line-height and
+#'   padding arguments use the original Badger finisher layout exactly.
 #'
 #' @return Invisibly returns the result of closing the PNG graphics device.
 #'
@@ -61,6 +63,11 @@ badger_finisher <- function(plot,
                             source_lineheight = 1.2,
                             title_plot_padding = 8,
                             title_border_padding = 4) {
+
+  legacy_spacing <- missing(title_lineheight) &&
+    missing(source_lineheight) &&
+    missing(title_plot_padding) &&
+    missing(title_border_padding)
 
   aspect <- match.arg(aspect)
   .badger_scalar_logical(border, "border")
@@ -115,89 +122,126 @@ badger_finisher <- function(plot,
   .badger_render_png(filename, w, h, 864, draw = function() {
     grid::grid.newpage()
 
-    title_grob <- grid::textGrob(
-      label = head,
-      hjust = 0,
-      vjust = 0.5,
-      x = 0.02,
-      gp = grid::gpar(
-        fontfamily = title_family,
-        fontsize = 16,
-        lineheight = title_lineheight
+    if (legacy_spacing) {
+      # Preserve the original composition byte-for-byte for existing calls.
+      # In particular, its implicit text line heights, title/caption labels,
+      # grob coordinates, plot margins, and gridExtra padding remain intact.
+      gridExtra::grid.arrange(
+        plot + ggplot2::labs(title = "", caption = ""),
+        top = grid::textGrob(
+          label = head,
+          hjust = 0,
+          x = 0.02,
+          y = 0.005,
+          gp = grid::gpar(fontfamily = title_family, fontsize = 16)
+        ),
+        bottom = gridExtra::arrangeGrob(
+          grid::textGrob(
+            label = source,
+            hjust = 0,
+            x = 0.025,
+            y = 1.1,
+            gp = grid::gpar(fontfamily = text_family, fontsize = 8)
+          ),
+          grid::rasterGrob(
+            img,
+            x = 0.975,
+            hjust = 1,
+            y = 0.6,
+            vjust = 0,
+            interpolate = TRUE,
+            width = grid::unit(0.2, units = "in"),
+            height = grid::unit(0.2, units = "in")
+          ),
+          widths = grid::unit(c(2, 1), "null"),
+          ncol = 2
+        )
       )
-    )
-    source_grob <- grid::textGrob(
-      label = source,
-      hjust = 0,
-      vjust = 0.5,
-      x = 0.025,
-      gp = grid::gpar(
-        fontfamily = text_family,
-        fontsize = 8,
-        lineheight = source_lineheight
+    } else {
+      title_grob <- grid::textGrob(
+        label = head,
+        hjust = 0,
+        vjust = 0.5,
+        x = 0.02,
+        gp = grid::gpar(
+          fontfamily = title_family,
+          fontsize = 16,
+          lineheight = title_lineheight
+        )
       )
-    )
-    logo_grob <- grid::rasterGrob(
-      img,
-      x = 0.975,
-      hjust = 1,
-      interpolate = TRUE,
-      width = grid::unit(0.2, units = "in"),
-      height = grid::unit(0.2, units = "in")
-    )
+      source_grob <- grid::textGrob(
+        label = source,
+        hjust = 0,
+        vjust = 0.5,
+        x = 0.025,
+        gp = grid::gpar(
+          fontfamily = text_family,
+          fontsize = 8,
+          lineheight = source_lineheight
+        )
+      )
+      logo_grob <- grid::rasterGrob(
+        img,
+        x = 0.975,
+        hjust = 1,
+        interpolate = TRUE,
+        width = grid::unit(0.2, units = "in"),
+        height = grid::unit(0.2, units = "in")
+      )
 
-    # Give the footer a concrete height based on whichever is taller: the
-    # complete (possibly multiline) source or the logo. grid.arrange() then
-    # measures the title and footer and assigns all remaining height to the
-    # plot, so additional text lines cannot overlap the plotting panel.
-    footer_height <- grid::unit.pmax(
-      grid::grobHeight(source_grob),
-      grid::unit(0.2, units = "in")
-    )
-    footer_grob <- gridExtra::arrangeGrob(
-      source_grob,
-      logo_grob,
-      widths = grid::unit(c(2, 1), "null"),
-      heights = footer_height,
-      ncol = 2
-    )
-
-    # Remove the in-plot title completely (`title = ""` still reserves a text
-    # row) and hand ownership of the top spacing to title_plot_padding. Keep
-    # the plot's other three margins intact.
-    resolved_theme <- ggplot2::theme_get()
-    if (length(plot$theme) > 0L) resolved_theme <- resolved_theme + plot$theme
-    plot_margin <- ggplot2::calc_element("plot.margin", resolved_theme)
-    plot_margin[[1L]] <- grid::unit(0, "pt")
-    finished_plot <- plot +
-      ggplot2::labs(title = NULL, caption = NULL) +
-      ggplot2::theme(
-        plot.title = ggplot2::element_blank(),
-        plot.caption = ggplot2::element_blank(),
-        plot.margin = plot_margin
+      # Give the footer a concrete height based on whichever is taller: the
+      # complete (possibly multiline) source or the logo. grid.arrange() then
+      # measures the title and footer and assigns all remaining height to the
+      # plot, so additional text lines cannot overlap the plotting panel.
+      footer_height <- grid::unit.pmax(
+        grid::grobHeight(source_grob),
+        grid::unit(0.2, units = "in")
+      )
+      footer_grob <- gridExtra::arrangeGrob(
+        source_grob,
+        logo_grob,
+        widths = grid::unit(c(2, 1), "null"),
+        heights = footer_height,
+        ncol = 2
       )
 
-    # Explicit spacer rows make the two title paddings independent. The plot
-    # receives whatever height remains after all fixed-height content has been
-    # measured.
-    finished_grob <- gridExtra::arrangeGrob(
-      grid::nullGrob(),
-      title_grob,
-      grid::nullGrob(),
-      ggplot2::ggplotGrob(finished_plot),
-      footer_grob,
-      grid::nullGrob(),
-      ncol = 1,
-      heights = grid::unit.c(
-        grid::unit(title_border_padding, "pt"),
-        grid::grobHeight(title_grob),
-        grid::unit(title_plot_padding, "pt"),
-        grid::unit(1, "null"),
-        footer_height,
-        grid::unit(4, "pt")
+      # Remove the in-plot title completely (`title = ""` still reserves a text
+      # row) and hand ownership of the top spacing to title_plot_padding. Keep
+      # the plot's other three margins intact.
+      resolved_theme <- ggplot2::theme_get()
+      if (length(plot$theme) > 0L) resolved_theme <- resolved_theme + plot$theme
+      plot_margin <- ggplot2::calc_element("plot.margin", resolved_theme)
+      plot_margin[[1L]] <- grid::unit(0, "pt")
+      finished_plot <- plot +
+        ggplot2::labs(title = NULL, caption = NULL) +
+        ggplot2::theme(
+          plot.title = ggplot2::element_blank(),
+          plot.caption = ggplot2::element_blank(),
+          plot.margin = plot_margin
+        )
+
+      # Explicit spacer rows make the two title paddings independent. The plot
+      # receives whatever height remains after all fixed-height content has been
+      # measured.
+      finished_grob <- gridExtra::arrangeGrob(
+        grid::nullGrob(),
+        title_grob,
+        grid::nullGrob(),
+        ggplot2::ggplotGrob(finished_plot),
+        footer_grob,
+        grid::nullGrob(),
+        ncol = 1,
+        heights = grid::unit.c(
+          grid::unit(title_border_padding, "pt"),
+          grid::grobHeight(title_grob),
+          grid::unit(title_plot_padding, "pt"),
+          grid::unit(1, "null"),
+          footer_height,
+          grid::unit(4, "pt")
+        )
       )
-    )
-    grid::grid.draw(finished_grob)
+      grid::grid.draw(finished_grob)
+    }
 
     if (border) {
       grid::grid.rect(

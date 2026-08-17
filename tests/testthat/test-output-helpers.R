@@ -103,7 +103,9 @@ test_that("badger_finisher supports multiline title and source spacing", {
       title_family = "sans",
       text_family = "sans",
       title_lineheight = 0.85,
-      source_lineheight = 0.9
+      source_lineheight = 0.9,
+      title_plot_padding = 7,
+      title_border_padding = 6
     )
   )
   expect_true(file.exists(path))
@@ -126,6 +128,24 @@ test_that("badger_finisher supports multiline title and source spacing", {
       source_lineheight = NA_real_
     ),
     "source_lineheight"
+  )
+  expect_error(
+    badger_finisher(
+      plot,
+      filename = tempfile(fileext = ".png"),
+      register_fonts = FALSE,
+      title_plot_padding = -1
+    ),
+    "title_plot_padding"
+  )
+  expect_error(
+    badger_finisher(
+      plot,
+      filename = tempfile(fileext = ".png"),
+      register_fonts = FALSE,
+      title_border_padding = Inf
+    ),
+    "title_border_padding"
   )
 })
 

@@ -18,7 +18,9 @@ badger_finisher(
   title_family = "Franklin Gothic Demi Cond",
   text_family = "Franklin Gothic Medium Cond",
   title_lineheight = 1.2,
-  source_lineheight = 1.2
+  source_lineheight = 1.2,
+  title_plot_padding = 8,
+  title_border_padding = 4
 )
 }
 \arguments{
@@ -51,6 +53,10 @@ source line. The defaults use the standard Badger Institute fonts.}
 multipliers for multiline headlines and source lines. Smaller values
 tighten the spacing between lines. Both default to `1.2`, matching
 grid's standard text spacing.}
+
+\item{title_plot_padding, title_border_padding}{Non-negative spacing in
+points below and above the headline, respectively. These independently
+control the headline-to-plot gap and the top-border-to-headline inset.}
 }
 \value{
 Invisibly returns the result of closing the PNG graphics device.

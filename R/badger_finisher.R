@@ -23,6 +23,9 @@
 #'   multipliers for multiline headlines and source lines. Smaller values
 #'   tighten the spacing between lines. Both default to `1.2`, matching
 #'   grid's standard text spacing.
+#' @param title_plot_padding,title_border_padding Non-negative spacing in
+#'   points below and above the headline, respectively. These independently
+#'   control the headline-to-plot gap and the top-border-to-headline inset.
 #'
 #' @return Invisibly returns the result of closing the PNG graphics device.
 #'
@@ -55,7 +58,9 @@ badger_finisher <- function(plot,
                             title_family = "Franklin Gothic Demi Cond",
                             text_family = "Franklin Gothic Medium Cond",
                             title_lineheight = 1.2,
-                            source_lineheight = 1.2) {
+                            source_lineheight = 1.2,
+                            title_plot_padding = 8,
+                            title_border_padding = 4) {
 
   aspect <- match.arg(aspect)
   .badger_scalar_logical(border, "border")
@@ -76,6 +81,12 @@ badger_finisher <- function(plot,
     value <- get(argument)
     if (length(value) != 1L || !is.numeric(value) || !is.finite(value) || value <= 0) {
       stop("`", argument, "` must be a positive finite numeric scalar.", call. = FALSE)
+    }
+  }
+  for (argument in c("title_plot_padding", "title_border_padding")) {
+    value <- get(argument)
+    if (length(value) != 1L || !is.numeric(value) || !is.finite(value) || value < 0) {
+      stop("`", argument, "` must be a non-negative finite numeric scalar.", call. = FALSE)
     }
   }
 
@@ -151,11 +162,42 @@ badger_finisher <- function(plot,
       ncol = 2
     )
 
-    gridExtra::grid.arrange(
-      plot + ggplot2::labs(title = "", caption = ""),
-      top = title_grob,
-      bottom = footer_grob
+    # Remove the in-plot title completely (`title = ""` still reserves a text
+    # row) and hand ownership of the top spacing to title_plot_padding. Keep
+    # the plot's other three margins intact.
+    resolved_theme <- ggplot2::theme_get()
+    if (length(plot$theme) > 0L) resolved_theme <- resolved_theme + plot$theme
+    plot_margin <- ggplot2::calc_element("plot.margin", resolved_theme)
+    plot_margin[[1L]] <- grid::unit(0, "pt")
+    finished_plot <- plot +
+      ggplot2::labs(title = NULL, caption = NULL) +
+      ggplot2::theme(
+        plot.title = ggplot2::element_blank(),
+        plot.caption = ggplot2::element_blank(),
+        plot.margin = plot_margin
+      )
+
+    # Explicit spacer rows make the two title paddings independent. The plot
+    # receives whatever height remains after all fixed-height content has been
+    # measured.
+    finished_grob <- gridExtra::arrangeGrob(
+      grid::nullGrob(),
+      title_grob,
+      grid::nullGrob(),
+      ggplot2::ggplotGrob(finished_plot),
+      footer_grob,
+      grid::nullGrob(),
+      ncol = 1,
+      heights = grid::unit.c(
+        grid::unit(title_border_padding, "pt"),
+        grid::grobHeight(title_grob),
+        grid::unit(title_plot_padding, "pt"),
+        grid::unit(1, "null"),
+        footer_height,
+        grid::unit(4, "pt")
+      )
     )
+    grid::grid.draw(finished_grob)
 
     if (border) {
       grid::grid.rect(

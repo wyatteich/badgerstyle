@@ -19,6 +19,10 @@
 #'   Registration is cached for the remainder of the R session.
 #' @param title_family,text_family Font families used for the headline and
 #'   source line. The defaults use the standard Badger Institute fonts.
+#' @param title_lineheight,source_lineheight Positive numeric line-height
+#'   multipliers for multiline headlines and source lines. Smaller values
+#'   tighten the spacing between lines. Both default to `1.2`, matching
+#'   grid's standard text spacing.
 #'
 #' @return Invisibly returns the result of closing the PNG graphics device.
 #'
@@ -49,7 +53,9 @@ badger_finisher <- function(plot,
                             height = 5, width  = 9.55,
                             register_fonts = TRUE,
                             title_family = "Franklin Gothic Demi Cond",
-                            text_family = "Franklin Gothic Medium Cond") {
+                            text_family = "Franklin Gothic Medium Cond",
+                            title_lineheight = 1.2,
+                            source_lineheight = 1.2) {
 
   aspect <- match.arg(aspect)
   .badger_scalar_logical(border, "border")
@@ -64,6 +70,12 @@ badger_finisher <- function(plot,
     value <- get(argument)
     if (length(value) != 1L || !is.character(value) || is.na(value)) {
       stop("`", argument, "` must be a single character string.", call. = FALSE)
+    }
+  }
+  for (argument in c("title_lineheight", "source_lineheight")) {
+    value <- get(argument)
+    if (length(value) != 1L || !is.numeric(value) || !is.finite(value) || value <= 0) {
+      stop("`", argument, "` must be a positive finite numeric scalar.", call. = FALSE)
     }
   }
 
@@ -92,36 +104,57 @@ badger_finisher <- function(plot,
   .badger_render_png(filename, w, h, 864, draw = function() {
     grid::grid.newpage()
 
+    title_grob <- grid::textGrob(
+      label = head,
+      hjust = 0,
+      vjust = 0.5,
+      x = 0.02,
+      gp = grid::gpar(
+        fontfamily = title_family,
+        fontsize = 16,
+        lineheight = title_lineheight
+      )
+    )
+    source_grob <- grid::textGrob(
+      label = source,
+      hjust = 0,
+      vjust = 0.5,
+      x = 0.025,
+      gp = grid::gpar(
+        fontfamily = text_family,
+        fontsize = 8,
+        lineheight = source_lineheight
+      )
+    )
+    logo_grob <- grid::rasterGrob(
+      img,
+      x = 0.975,
+      hjust = 1,
+      interpolate = TRUE,
+      width = grid::unit(0.2, units = "in"),
+      height = grid::unit(0.2, units = "in")
+    )
+
+    # Give the footer a concrete height based on whichever is taller: the
+    # complete (possibly multiline) source or the logo. grid.arrange() then
+    # measures the title and footer and assigns all remaining height to the
+    # plot, so additional text lines cannot overlap the plotting panel.
+    footer_height <- grid::unit.pmax(
+      grid::grobHeight(source_grob),
+      grid::unit(0.2, units = "in")
+    )
+    footer_grob <- gridExtra::arrangeGrob(
+      source_grob,
+      logo_grob,
+      widths = grid::unit(c(2, 1), "null"),
+      heights = footer_height,
+      ncol = 2
+    )
+
     gridExtra::grid.arrange(
       plot + ggplot2::labs(title = "", caption = ""),
-      top = grid::textGrob(
-        label = head,
-        hjust = 0,
-        x = 0.02,
-        y = 0.005,
-        gp = grid::gpar(fontfamily = title_family, fontsize = 16)
-      ),
-      bottom = gridExtra::arrangeGrob(
-        grid::textGrob(
-          label = source,
-          hjust = 0,
-          x = 0.025,
-          y = 1.1,
-          gp = grid::gpar(fontfamily = text_family, fontsize = 8)
-        ),
-        grid::rasterGrob(
-          img,
-          x = 0.975,
-          hjust = 1,
-          y = 0.6,
-          vjust = 0,
-          interpolate = TRUE,
-          width = grid::unit(0.2, units = "in"),
-          height = grid::unit(0.2, units = "in")
-        ),
-        widths = grid::unit(c(2, 1), "null"),
-        ncol = 2
-      )
+      top = title_grob,
+      bottom = footer_grob
     )
 
     if (border) {

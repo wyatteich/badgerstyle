@@ -85,6 +85,50 @@ test_that("badger_finisher writes a composed PNG", {
   expect_gt(file.info(path)$size, 0)
 })
 
+test_that("badger_finisher supports multiline title and source spacing", {
+  path <- tempfile(fileext = ".png")
+  plot <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+    ggplot2::geom_point()
+
+  expect_no_warning(
+    badger_finisher(
+      plot,
+      head = "First title line\nSecond title line",
+      source = "Source: first line\nSource: second line",
+      filename = path,
+      aspect = "custom",
+      height = 3,
+      width = 4,
+      register_fonts = FALSE,
+      title_family = "sans",
+      text_family = "sans",
+      title_lineheight = 0.85,
+      source_lineheight = 0.9
+    )
+  )
+  expect_true(file.exists(path))
+  expect_gt(file.info(path)$size, 0)
+
+  expect_error(
+    badger_finisher(
+      plot,
+      filename = tempfile(fileext = ".png"),
+      register_fonts = FALSE,
+      title_lineheight = 0
+    ),
+    "title_lineheight"
+  )
+  expect_error(
+    badger_finisher(
+      plot,
+      filename = tempfile(fileext = ".png"),
+      register_fonts = FALSE,
+      source_lineheight = NA_real_
+    ),
+    "source_lineheight"
+  )
+})
+
 test_that("write_badger_table writes a readable workbook", {
   path <- tempfile(fileext = ".xlsx")
   data <- data.frame(

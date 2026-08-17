@@ -16,7 +16,9 @@ badger_finisher(
   width = 9.55,
   register_fonts = TRUE,
   title_family = "Franklin Gothic Demi Cond",
-  text_family = "Franklin Gothic Medium Cond"
+  text_family = "Franklin Gothic Medium Cond",
+  title_lineheight = 1.2,
+  source_lineheight = 1.2
 )
 }
 \arguments{
@@ -44,6 +46,11 @@ Registration is cached for the remainder of the R session.}
 
 \item{title_family, text_family}{Font families used for the headline and
 source line. The defaults use the standard Badger Institute fonts.}
+
+\item{title_lineheight, source_lineheight}{Positive numeric line-height
+multipliers for multiline headlines and source lines. Smaller values
+tighten the spacing between lines. Both default to `1.2`, matching
+grid's standard text spacing.}
 }
 \value{
 Invisibly returns the result of closing the PNG graphics device.

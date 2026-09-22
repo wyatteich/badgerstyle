@@ -3,6 +3,7 @@
 S3method(ggplot_add,badger_dynamic_legend)
 S3method(ggplot_add,badger_line)
 export(badblue)
+export(badger_annotation)
 export(badger_colors)
 export(badger_dynamic_legend)
 export(badger_finisher)

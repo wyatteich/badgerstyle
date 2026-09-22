@@ -96,6 +96,60 @@ ggplot(df, aes(year, value)) +
   badger_line(colour = badred)
 ```
 
+## Text annotations and callouts
+
+`badger_annotation()` adds individual notes using the established BTN annotation
+treatments. Use `style = "label"` for dark text on a borderless white box,
+`style = "callout"` for white text on a dark box with a downward triangle,
+or `style = "text"` for plain text. Fonts, padding, and connector styling have
+Badger defaults.
+
+```r
+ggplot(df, aes(year, value)) +
+  badger_style() +
+  badger_line(colour = badblue) +
+  badger_annotation(
+    x = 2020, y = 15, label = "Temporary decline",
+    style = "callout"
+  )
+```
+
+`x` and `y` are the **label position**. To point to a separate observation,
+supply `xend` and `yend`; an arrow replaces the triangle automatically:
+
+```r
+badger_annotation(
+  x = 2018, y = 20, label = "Low point",
+  xend = 2020, yend = 12.5
+)
+```
+
+For several notes, supply a data frame and unquoted column names or expressions:
+
+```r
+notes <- data.frame(
+  year = c(2020, 2024), value = c(12, 19), note = c("Low", "Latest")
+)
+badger_annotation(
+  x = year, y = value, label = note, data = notes,
+  nudge_y = 1, style = "text"
+)
+```
+
+Use `pointer = "up"` to place a triangle callout below its position,
+`pointer = "none"` for a box alone, or `connector = "line"` for an unheaded
+connector. `fill = NA` makes a box transparent. Nudges move the label and leave
+connector targets unchanged; Date x nudges are in days, POSIXct nudges in seconds.
+Facet columns in `notes` are retained. Scalar inputs recycle, but other lengths
+must match the number of annotations.
+
+Place labels inside any fixed scale limits and leave room for their text.
+This helper styles explicitly positioned annotations; it does not select
+observations or resolve collisions automatically. Connector targets are exact:
+offset them slightly from endpoint circles to leave clearance. For a secondary
+axis, supply positions transformed into the primary plotting scale. Triangle
+directions assume Cartesian coordinates. See `?badger_annotation` for all options.
+
 ## Publication output
 
 Use `badger_finisher()` to write a high-resolution PNG with a headline, source

@@ -11,7 +11,8 @@ Authors@R: c(
   )
 Description: Tools for creating Badger Institute graphics and tables.
     Provides a ggplot2 theme, layered line and endpoint styling,
-    collision-free right-side legends, publication helpers, axis-label
+    collision-free right-side legends, text annotations and callouts,
+    publication helpers, axis-label
     formatters, and styled Excel workbook output.
 License: file LICENSE
 URL: https://github.com/wyatteich/badgerstyle

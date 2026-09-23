@@ -4,7 +4,13 @@
 \alias{badger_publish}
 \title{Save a Badger graphic using a legacy size preset}
 \usage{
-badger_publish(filename = "plot.png", plot, aspect = c("1col", "2col", "web"))
+badger_publish(
+  filename = "plot.png",
+  plot,
+  aspect = c("1col", "2col", "web"),
+  dpi = 864,
+  device = c("png", "ragg", "auto")
+)
 }
 \arguments{
 \item{filename}{Output path for the PNG file.}
@@ -13,6 +19,14 @@ badger_publish(filename = "plot.png", plot, aspect = c("1col", "2col", "web"))
 
 \item{aspect}{One of `"1col"`, `"2col"`, or `"web"`, controlling the
 output dimensions in inches.}
+
+\item{dpi}{Output resolution in dots per inch. Defaults to the original
+`864`; use `150` for faster drafts or `300` for smaller final files.
+Physical dimensions and text sizes remain the same.}
+
+\item{device}{PNG backend: `"png"` (the original default), `"ragg"` (requires
+the optional ragg package), or `"auto"` (ragg when installed, otherwise
+png). Font metrics and antialiasing can differ between backends.}
 }
 \value{
 Invisibly returns the result of closing the PNG graphics device.

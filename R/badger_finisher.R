@@ -28,6 +28,12 @@
 #'   control the headline-to-plot gap and the top-border-to-headline inset.
 #'   For backward compatibility, calls that omit all four line-height and
 #'   padding arguments use the original Badger finisher layout exactly.
+#' @param dpi Output resolution in dots per inch. Defaults to the original
+#'   `864`; use `150` for faster drafts or `300` for smaller final files.
+#'   Physical dimensions and text sizes remain the same.
+#' @param device PNG backend: `"png"` (the original default), `"ragg"` (requires
+#'   the optional ragg package), or `"auto"` (ragg when installed, otherwise
+#'   png). Font metrics and antialiasing can differ between backends.
 #'
 #' @return Invisibly returns the result of closing the PNG graphics device.
 #'
@@ -62,7 +68,9 @@ badger_finisher <- function(plot,
                             title_lineheight = 1.2,
                             source_lineheight = 1.2,
                             title_plot_padding = 8,
-                            title_border_padding = 4) {
+                            title_border_padding = 4,
+                            dpi = 864,
+                            device = c("png", "ragg", "auto")) {
 
   legacy_spacing <- missing(title_lineheight) &&
     missing(source_lineheight) &&
@@ -70,6 +78,7 @@ badger_finisher <- function(plot,
     missing(title_border_padding)
 
   aspect <- match.arg(aspect)
+  device <- .badger_png_device(match.arg(device), dpi)
   .badger_scalar_logical(border, "border")
   .badger_scalar_logical(register_fonts, "register_fonts")
   if (length(height) != 1L || !is.numeric(height) || !is.finite(height) || height <= 0) {
@@ -99,11 +108,7 @@ badger_finisher <- function(plot,
 
   if (register_fonts) badger_register_fonts()
 
-  # insert logo
-  #plot <- cowplot::ggdraw(plot) +
-    #cowplot::draw_image(logo_ref, x = 1, y = 0, hjust = 1, vjust = 1, width = 0.05, height = 0.05)
-
-  img <- png::readPNG(logo_ref)
+  img <- .badger_read_logo(logo_ref)
 
   aspect_ratios <- list(
     default = list(h = 5, w = 9.55),
@@ -119,7 +124,7 @@ badger_finisher <- function(plot,
 
 
 
-  .badger_render_png(filename, w, h, 864, draw = function() {
+  .badger_render_png(filename, w, h, dpi, device = device, draw = function() {
     grid::grid.newpage()
 
     if (legacy_spacing) {

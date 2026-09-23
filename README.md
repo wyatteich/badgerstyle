@@ -165,6 +165,60 @@ badger_finisher(
 )
 ```
 
+### Faster graph updates
+
+Both `badger_finisher()` and `badger_publish()` accept `dpi` and `device`.
+Existing calls retain the original `device = "png"` and `dpi = 864` defaults.
+To try AGG rendering, install the optional package once:
+
+```r
+install.packages("ragg")
+```
+
+During iteration, save a lower-resolution draft:
+
+```r
+badger_finisher(
+  plot,
+  head = "Wisconsin employment continues to grow",
+  source = "Source: U.S. Bureau of Labor Statistics",
+  filename = "employment-draft.png",
+  aspect = "web",
+  device = "ragg",
+  dpi = 150
+)
+```
+
+For final output, choose the publication's required DPI (or omit `dpi` to keep
+864). Physical dimensions, text sizes, and spacing settings are unchanged;
+lower DPI reduces pixel detail. At the same size, 150 DPI draws about 33 times
+fewer pixels than 864 DPI. This is a pixel-count reduction, not a guaranteed
+runtime multiplier.
+
+`device = "auto"` uses ragg when available and otherwise uses the original PNG
+device. Explicit `device = "ragg"` reports a missing dependency instead of
+silently switching. Backend speed depends on the plot and platform; font
+metrics and antialiasing can also differ, so inspect a final export when
+switching. ragg discovers installed system fonts directly. Both Franklin Gothic
+families must still be installed for the intended typography.
+
+The finisher caches the most recently decoded logo as a native raster, refreshing
+it when its path, size, or modification/change timestamp changes. Font
+registration is already cached per R session. There is no plot cache: updated
+data and layers are rebuilt on each save.
+
+The helpers already write directly to a PNG device and return invisibly.
+Changing RStudio's plot-pane backend does not change these exports. Assign your
+plot to an object and call the finisher without also printing the plot to avoid
+rendering both a preview and a saved file. For expensive analyses, reuse prepared
+data and precompute model fits outside the plot when only labels or styling are
+changing.
+
+To benchmark full exports locally, run
+`source(system.file("benchmarks", "render-performance.R", package = "badgerstyle"))`.
+The script compares both backends at 864 and 150 DPI on a scatterplot and a
+six-series Badger line chart, including building, drawing, and writing the PNG.
+
 ## Styled Excel tables
 
 `write_badger_table()` writes a data frame to an `.xlsx` file with Badger

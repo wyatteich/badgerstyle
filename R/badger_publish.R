@@ -8,6 +8,7 @@
 #' @param plot A ggplot or grid grob to render.
 #' @param aspect One of `"1col"`, `"2col"`, or `"web"`, controlling the
 #'   output dimensions in inches.
+#' @inheritParams badger_finisher
 #'
 #' @return Invisibly returns the result of closing the PNG graphics device.
 #'
@@ -21,10 +22,12 @@
 #' @seealso [badger_finisher()]
 #' @export
 
-badger_publish <- function(filename = "plot.png", plot, aspect = c("1col", "2col", "web")) {
+badger_publish <- function(filename = "plot.png", plot, aspect = c("1col", "2col", "web"),
+                           dpi = 864, device = c("png", "ragg", "auto")) {
   # will format the size of the graphic according to publisher size specifications
 
   aspect <- match.arg(aspect)
+  device <- .badger_png_device(match.arg(device), dpi)
 
   if (aspect == "1col") {
     h <- 3.84
@@ -41,17 +44,7 @@ badger_publish <- function(filename = "plot.png", plot, aspect = c("1col", "2col
   }
 
 
-  # ggplot2::ggsave(
-  #   filename,
-  #   plot,
-  #   dpi = 600,
-  #   height = h,
-  #   width = w,
-  #   unit = "in"
-  # )
-
-
-  .badger_render_png(filename, w, h, 864, draw = function() {
+  .badger_render_png(filename, w, h, dpi, device = device, draw = function() {
     grid::grid.newpage()
     grid::grid.draw(plot)
   })

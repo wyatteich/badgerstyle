@@ -154,7 +154,8 @@ test_that("badger_line orders each series mask and color layers together", {
   for (start in c(1L, 5L)) {
     layer_group <- plot$layers[start + 0:3]
     expect_equal(
-      vapply(layer_group, function(layer) class(layer$geom)[[1L]], character(1)),
+      vapply(layer_group, function(layer) class(layer$geom)[[1L]], character(1),
+             USE.NAMES = FALSE),
       expected_geoms
     )
     expect_equal(layer_group[[1L]]$aes_params$colour, "white")

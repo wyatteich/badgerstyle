@@ -20,7 +20,9 @@ badger_finisher(
   title_lineheight = 1.2,
   source_lineheight = 1.2,
   title_plot_padding = 8,
-  title_border_padding = 4
+  title_border_padding = 4,
+  dpi = 864,
+  device = c("png", "ragg", "auto")
 )
 }
 \arguments{
@@ -59,6 +61,14 @@ points below and above the headline, respectively. These independently
 control the headline-to-plot gap and the top-border-to-headline inset.
 For backward compatibility, calls that omit all four line-height and
 padding arguments use the original Badger finisher layout exactly.}
+
+\item{dpi}{Output resolution in dots per inch. Defaults to the original
+`864`; use `150` for faster drafts or `300` for smaller final files.
+Physical dimensions and text sizes remain the same.}
+
+\item{device}{PNG backend: `"png"` (the original default), `"ragg"` (requires
+the optional ragg package), or `"auto"` (ragg when installed, otherwise
+png). Font metrics and antialiasing can differ between backends.}
 }
 \value{
 Invisibly returns the result of closing the PNG graphics device.

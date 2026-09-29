@@ -99,7 +99,7 @@ badger_style <- function(
       margin = ggplot2::margin(t=3, b = 5)
     ),
     axis.text.y = ggplot2::element_text(
-      margin = ggplot2::margin(5, l = 5)
+      margin = ggplot2::margin(r = 8, l = 5)
     ),
     #axis.ticks.length = ggplot2::element_blank(),
     axis.ticks.length = ggplot2::unit(0.05, "in"),

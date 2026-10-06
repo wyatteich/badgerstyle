@@ -226,6 +226,22 @@ To benchmark full exports locally, run
 The script compares both backends at 864 and 150 DPI on a scatterplot and a
 six-series Badger line chart, including building, drawing, and writing the PNG.
 
+## Compact number labels
+
+Use `label_number_trim()` in a ggplot2 scale to abbreviate values with lowercase
+`k`, `m`, `b`, and `t`, and remove all-zero decimal places:
+
+```r
+scale_y_continuous(labels = label_number_trim())
+label_number_trim()(c(0, 60, 1200, 6e7))
+# "0" "60" "1.2k" "60m"
+```
+
+The default accuracy is 0.1. Currency prefixes, decimal separators, and custom
+scale thresholds work as in `scales::label_number()`. For a fixed unit, use
+`label_number_trim(scale_cut = stats::setNames(0, ""), scale = 1e-6, suffix = "m")`.
+This changes labels only. The existing `lab_kmb()` formatter remains available.
+
 ## Styled Excel tables
 
 `write_badger_table()` writes a data frame to an `.xlsx` file with Badger

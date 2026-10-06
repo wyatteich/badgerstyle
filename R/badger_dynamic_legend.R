@@ -2,8 +2,9 @@
 #'
 #' Labels each series beside its final observed point. Labels that would
 #' overlap are moved vertically by the smallest amount needed to maintain a
-#' minimum gap. Optional arrows connect the moved labels back to their actual
-#' endpoints.
+#' minimum gap. When no labels need displacement, all use small arrowheads
+#' without stems beside the text. If any label is displaced by spacing or bounds,
+#' all labels in that panel use connecting arrows to their actual endpoints.
 #'
 #' The horizontal position arguments are offsets beyond the last observed
 #' x-value. By default they are fractions of the observed x-range, which makes
@@ -42,7 +43,8 @@
 #'   `bound_padding` inside `y_limits`.
 #' @param bound_padding Fraction of `y_limits` reserved above and below the
 #'   labels when `floor` or `ceiling` is not supplied. Defaults to `0.035`.
-#' @param arrows Logical; draw connecting arrows. Defaults to `TRUE`.
+#' @param arrows Logical; draw arrowheads, with connecting stems for the whole
+#'   panel when any label is displaced. Defaults to `TRUE`.
 #' @param mask Logical; cover gridlines in the label area. Defaults to `TRUE`.
 #' @param hide_legend Logical; hide ggplot's standard legend. Defaults to
 #'   `TRUE`.
@@ -50,7 +52,10 @@
 #'   observed x-range or in raw `"data"` units.
 #' @param label_offset,arrow_start_offset,arrow_end_offset,mask_offset,right_space
 #'   Horizontal offsets beyond the final observed x-value. `right_space`
-#'   controls how much room the plot reserves for the labels.
+#'   controls how much room the plot reserves for the labels. These describe
+#'   the layout with stems. When only arrowheads are needed, the text and heads
+#'   move inward together and the right-side reserve shrinks by the same amount,
+#'   preserving the width available for label text.
 #' @param text_size,text_family,text_color,hjust,vjust,lineheight Text styling
 #'   passed to [ggplot2::geom_text()].
 #' @param arrow_linewidth,arrow_length,arrow_type Arrow styling. `arrow_length`
@@ -280,6 +285,11 @@ badger_dynamic_legend <- function(
       floor = floor,
       ceiling = ceiling
     )
+    # Ignore only floating-point roundoff from spacing, not real displacement.
+    endpoints$.badger_displaced <- abs(
+      endpoints$.badger_label_y - endpoints$.badger_y_numeric
+    ) > 64 * .Machine$double.eps * pmax(1, y_span, abs(endpoints$.badger_y_numeric))
+    endpoints$.badger_stem <- any(endpoints$.badger_displaced)
     endpoints$.badger_label <- as.character(endpoints[[label_name]])
 
     panel_min_x <- min(panel$.badger_x_numeric)
@@ -306,11 +316,19 @@ badger_dynamic_legend <- function(
       }
     }
 
+    # Without stems, reclaim the connector run while retaining room for the
+    # arrowhead and the configured gap between its base and the text. Shift the
+    # right boundary equally so the width available to label text is unchanged.
+    # These offsets stay in the caller's units (including transformed fractions).
+    compact_shift <- if (arrows && !any(endpoints$.badger_stem)) {
+      max(0, arrow_start_offset - arrow_end_offset -
+        max(0, label_offset - arrow_start_offset))
+    } else 0
     endpoints$.badger_label_x_numeric <- position(
-      panel_max_x, max(panel$.badger_x_transformed), label_offset
+      panel_max_x, max(panel$.badger_x_transformed), label_offset - compact_shift
     )
     endpoints$.badger_arrow_start_numeric <- position(
-      panel_max_x, max(panel$.badger_x_transformed), arrow_start_offset
+      panel_max_x, max(panel$.badger_x_transformed), arrow_start_offset - compact_shift
     )
     endpoints$.badger_arrow_end_numeric <- position(
       endpoints$.badger_x_numeric,
@@ -321,7 +339,7 @@ badger_dynamic_legend <- function(
     panel_key <- panel[1L, by, drop = FALSE]
     spacer <- panel_key
     spacer$.badger_right_x_numeric <- position(
-      panel_max_x, max(panel$.badger_x_transformed), right_space
+      panel_max_x, max(panel$.badger_x_transformed), right_space - compact_shift
     )
     spacer$.badger_mid_y <- mean(y_limits)
     mask_data <- panel_key
@@ -408,9 +426,10 @@ badger_dynamic_legend <- function(
       y = .data$.badger_label_y,
       xend = .data$.badger_arrow_end,
       yend = .data$.badger_y_numeric,
-      colour = !!rlang::sym(group_name)
+      colour = !!rlang::sym(group_name),
+      stem = .data$.badger_stem
     )
-    layers$arrows <- ggplot2::geom_segment(
+    layers$arrows <- .badger_legend_arrow_layer(
       data = endpoints,
       mapping = arrow_mapping,
       inherit.aes = FALSE,
@@ -601,3 +620,45 @@ ggplot_add.badger_dynamic_legend <- function(object, plot, object_name) {
   }
   invisible(x)
 }
+
+# Keep the head's dimensions in physical units so it stays triangular on Date,
+# transformed, and differently sized charts. A panel with no displaced labels has no line grobs.
+.badger_legend_arrow_layer <- function(data, mapping, inherit.aes = FALSE,
+                                      linewidth, arrow, show.legend = FALSE) {
+  ggplot2::layer(data = data, mapping = mapping, stat = "identity",
+    geom = .GeomBadgerLegendArrow, position = "identity",
+    inherit.aes = inherit.aes, show.legend = show.legend,
+    params = list(linewidth = linewidth, arrow = arrow))
+}
+
+.GeomBadgerLegendArrow <- ggplot2::ggproto(
+  "GeomBadgerLegendArrow", ggplot2::GeomSegment,
+  required_aes = c("x", "y", "xend", "yend", "stem"),
+  draw_panel = function(data, panel_params, coord, arrow = NULL,
+                        arrow.fill = NULL, lineend = "butt", linejoin = "round",
+                        na.rm = FALSE) {
+    stems <- data[data$stem, , drop = FALSE]
+    heads <- data[!data$stem, , drop = FALSE]
+    children <- list()
+    if (nrow(stems)) children[[length(children) + 1L]] <-
+      ggplot2::GeomSegment$draw_panel(stems, panel_params, coord,
+        arrow = arrow, arrow.fill = arrow.fill, lineend = lineend,
+        linejoin = linejoin, na.rm = na.rm)
+    if (nrow(heads) && !is.null(arrow)) {
+      heads <- coord$transform(heads, panel_params)
+      angle <- arrow$angle * pi / 180
+      for (i in seq_len(nrow(heads))) {
+        color <- scales::alpha(heads$colour[[i]], heads$alpha[[i]])
+        x <- grid::unit(rep(heads$x[[i]], 3), "native") -
+          arrow$length * c(0, cos(angle), 0)
+        y <- grid::unit(rep(heads$y[[i]], 3), "native") +
+          arrow$length * c(-sin(angle), 0, sin(angle))
+        gp <- grid::gpar(col = color, fill = color,
+          lwd = heads$linewidth[[i]] * (72.27 / 25.4), linejoin = linejoin)
+        children[[length(children) + 1L]] <- if (arrow$type == 2L)
+          grid::polygonGrob(x, y, gp = gp) else grid::polylineGrob(x, y, gp = gp)
+      }
+    }
+    grid::gTree(children = do.call(grid::gList, children))
+  }
+)

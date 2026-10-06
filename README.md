@@ -74,6 +74,13 @@ log scales. Facet variables are inferred for simple `facet_wrap()` and
 `offset_unit = "data"` for offsets in raw x-axis units, and `arrows = FALSE`
 when connectors are not needed.
 
+Dynamic legends use stemless arrowheads when no labels need displacement,
+with a compact gap beside the endpoints. Connector space is reserved only
+when stems are needed; the space available for label text stays the same.
+If spacing or bounds displace any label, every label in that panel receives a
+connecting stem for a consistent appearance.
+Set `arrows = FALSE` to hide both heads and stems.
+
 ## Badger lines
 
 `badger_line()` likewise inherits the data and `x`, `y`, and color/group

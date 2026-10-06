@@ -80,7 +80,7 @@ to the range of `y` in `data`.}
 \item{bound_padding}{Fraction of `y_limits` reserved above and below the
 labels when `floor` or `ceiling` is not supplied. Defaults to `0.035`.}
 
-\item{arrows}{Logical; draw connecting arrows. Defaults to `TRUE`.}
+\item{arrows}{Logical; draw arrowheads, with connecting stems for the whole panel when any label is displaced. Defaults to `TRUE`.}
 
 \item{mask}{Logical; cover gridlines in the label area. Defaults to `TRUE`.}
 
@@ -91,7 +91,9 @@ labels when `floor` or `ceiling` is not supplied. Defaults to `0.035`.}
 observed x-range or in raw `"data"` units.}
 
 \item{label_offset, arrow_start_offset, arrow_end_offset, mask_offset, right_space}{Horizontal offsets beyond the final observed x-value. `right_space`
-controls how much room the plot reserves for the labels.}
+controls how much room the plot reserves for the labels. These describe
+the layout with stems. When only arrowheads are needed, text and heads move
+inward together and the right-side reserve shrinks equally, preserving label width.}
 
 \item{text_size, text_family, text_color, hjust, vjust, lineheight}{Text styling
 passed to [ggplot2::geom_text()].}
@@ -111,8 +113,9 @@ When plot information must be inherited, a deferred component that
 \description{
 Labels each series beside its final observed point. Labels that would
 overlap are moved vertically by the smallest amount needed to maintain a
-minimum gap. Optional arrows connect the moved labels back to their actual
-endpoints.
+minimum gap. When no labels need displacement, all use stemless arrowheads.
+If any label is displaced by spacing or bounds, all labels in that panel use
+connectors to their actual endpoints.
 }
 \details{
 The horizontal position arguments are offsets beyond the last observed
